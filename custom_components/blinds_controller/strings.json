@@ -1,5 +1,6 @@
 {
 	"config": {
+		"title": "Blinds configuration for Home Assistant",
 		"step": {
 			"user": {
 				"title": "Blinds configuration",
