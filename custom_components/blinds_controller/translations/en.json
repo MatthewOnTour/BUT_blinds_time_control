@@ -14,6 +14,16 @@
 					"tilt_closed": "Time fo tilt angle for the closed state from open state in seconds"
 				}
 			}
+		},
+		"error": {
+			"already_configured": "Device is already configured",
+			"cannot_connect": "Failed to connect, please try again",
+			"invalid_auth": "Invalid authentication",
+			"unknown": "Unexpected error"
+		},
+		"abort": {
+			"already_configured": "Device is already configured",
+			"updated": "The configuration has been updated."
 		}
 	},
 	"options": {
