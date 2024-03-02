@@ -1,5 +1,6 @@
 {
   "domain": "blinds_time_control",
+  "name": "Blinds control",
   "codeowners": ["@MatthewOnTour"],
   "dependencies": [],
   "documentation": "https://github.com/MatthewOnTour/BUT_blinds_time_control/blob/main/custom_components/README.md",
