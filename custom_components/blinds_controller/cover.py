@@ -18,3 +18,12 @@ class BlindsCover(CoverEntity):
     @property
     def name(self):
         return self.blinds_data["ent_name"]
+
+    @property
+    def is_closed(self):
+        # Replace this with the actual logic to determine if the cover is closed
+        return self.blinds_data.get("is_closed", None)
+
+    def open_cover(self, **kwargs):
+        # Replace this with the actual logic to open the cover
+        self.blinds_data["is_closed"] = False
