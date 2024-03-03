@@ -1,6 +1,4 @@
 from homeassistant.components.cover import CoverEntity
-from homeassistant.helpers.entity_platform import async_setup_entry_platform
-
 from .const import DOMAIN
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
