@@ -10,14 +10,14 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Set up your integration with the configuration entry
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data
-    # Load the blinds_controller platform with the configuration entry
+    # Load the cover platform with the configuration entry
     hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "blinds_controller")
+        hass.config_entries.async_forward_entry_setup(entry, "cover")
     )
     return True
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Unload your integration when the configuration entry is removed
-    await hass.config_entries.async_forward_entry_unload(entry, "blinds_controller")
+    await hass.config_entries.async_forward_entry_unload(entry, "cover")
     hass.data[DOMAIN].pop(entry.entry_id)
     return True

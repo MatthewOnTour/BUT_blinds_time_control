@@ -1,16 +1,17 @@
 from homeassistant.components.cover import CoverEntity
+from homeassistant.helpers.entity_platform import async_setup_entry_platform
 
 from .const import DOMAIN
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     # Get the blinds data from the config entry
-    blinds_data = hass.data[DOMAIN][discovery_info["entry_id"]]
+    blinds_data = hass.data[DOMAIN][config_entry.entry_id]
 
     # Create a list of BlindsCover entities
     entities = [BlindsCover(blinds_data)]
 
     # Add the entities
-    add_entities(entities, True)
+    async_add_entities(entities, True)
 
 class BlindsCover(CoverEntity):
     def __init__(self, blinds_data):

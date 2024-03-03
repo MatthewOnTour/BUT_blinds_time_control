@@ -1,10 +1,16 @@
 from homeassistant import config_entries
+from homeassistant.core import callback
 import voluptuous as vol
 from .const import DOMAIN
 
 class BlindsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+
+    @callback
+    def _get_entity_ids(self):
+        # Fetch the list of entity IDs
+        return self.hass.states.async_entity_ids()
 
     async def async_step_user(self, user_input=None):
         errors = {}
@@ -20,12 +26,12 @@ class BlindsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required("ent_name"): str,
-                    vol.Required("entity_up"): str,
-                    vol.Required("entity_down"): str,
-                    vol.Required("time_up"): int,
-                    vol.Required("time_down"): int,
-                    vol.Required("tilt_open"): int,
-                    vol.Required("tilt_closed"): int,
+                    vol.Required("entity_up"): vol.In(self._get_entity_ids()),
+                    vol.Required("entity_down"): vol.In(self._get_entity_ids()),
+                    vol.Required("time_up"): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                    vol.Required("time_down"): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                    vol.Required("tilt_open"): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                    vol.Required("tilt_closed"): vol.All(vol.Coerce(int), vol.Range(min=0)),
                 }
             ),
             errors=errors,
@@ -43,12 +49,12 @@ class BlindsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         options_schema = vol.Schema(
             {
                 vol.Optional("ent_name", default=self.config_entry.options.get("ent_name")): str,
-                vol.Optional("entity_up", default=self.config_entry.options.get("entity_up")): str,
-                vol.Optional("entity_down", default=self.config_entry.options.get("entity_down")): str,
-                vol.Optional("time_up", default=self.config_entry.options.get("time_up")): int,
-                vol.Optional("time_down", default=self.config_entry.options.get("time_down")): int,
-                vol.Optional("tilt_open", default=self.config_entry.options.get("tilt_open")): int,
-                vol.Optional("tilt_closed", default=self.config_entry.options.get("tilt_closed")): int,
+                vol.Optional("entity_up", default=self.config_entry.options.get("entity_up")): vol.In(self._get_entity_ids()),
+                vol.Optional("entity_down", default=self.config_entry.options.get("entity_down")): vol.In(self._get_entity_ids()),
+                vol.Optional("time_up", default=self.config_entry.options.get("time_up")): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                vol.Optional("time_down", default=self.config_entry.options.get("time_down")): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                vol.Optional("tilt_open", default=self.config_entry.options.get("tilt_open")): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                vol.Optional("tilt_closed", default=self.config_entry.options.get("tilt_closed")): vol.All(vol.Coerce(int), vol.Range(min=0)),
             }
         )
 
