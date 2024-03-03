@@ -15,8 +15,6 @@ class BlindsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         errors = {}
         if user_input is not None:
-            # Validate user input here and proceed to next step if valid
-            # If invalid, add error messages to `errors` dict
             return self.async_create_entry(
                 title=user_input["ent_name"],
                 data=user_input,
@@ -36,28 +34,3 @@ class BlindsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_get_options_flow(self):
-        return OptionsFlowHandler(self)
-
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    def __init__(self, config_flow):
-        self.config_flow = config_flow
-
-    async def async_step_init(self, user_input=None):
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        options_schema = vol.Schema(
-            {
-                vol.Optional("ent_name", default=self.config_flow.config_entry.options.get("ent_name")): str,
-                vol.Optional("entity_up", default=self.config_flow.config_entry.options.get("entity_up")): vol.In(self.config_flow._get_entity_ids()),
-                vol.Optional("entity_down", default=self.config_flow.config_entry.options.get("entity_down")): vol.In(self.config_flow._get_entity_ids()),
-                vol.Optional("time_up", default=self.config_flow.config_entry.options.get("time_up")): vol.All(vol.Coerce(int), vol.Range(min=0)),
-                vol.Optional("time_down", default=self.config_flow.config_entry.options.get("time_down")): vol.All(vol.Coerce(int), vol.Range(min=0)),
-                vol.Optional("tilt_open", default=self.config_flow.config_entry.options.get("tilt_open")): vol.All(vol.Coerce(int), vol.Range(min=0)),
-                vol.Optional("tilt_closed", default=self.config_flow.config_entry.options.get("tilt_closed")): vol.All(vol.Coerce(int), vol.Range(min=0)),
-            }
-        )
-
-        return self.async_show_form(step_id="init", data_schema=options_schema)
