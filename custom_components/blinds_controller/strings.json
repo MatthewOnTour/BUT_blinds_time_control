@@ -4,7 +4,7 @@
 		"step": {
 			"user": {
 				"title": "Blinds configuration",
-				"description": "If you need help with the configuration go to: https://github.com/MatthewOnTour/BUT_blinds_time_control/blob/main/custom_components/README.md",
+				"description": "Initial configuration for the blinds component",
 				"data": {
 					"ent_name": "Custom Name of the blinds",
 					"entity_up": "Entity to control the up movement",
