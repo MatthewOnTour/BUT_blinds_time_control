@@ -7,10 +7,11 @@ from .const import DOMAIN
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     # Create a new cover entity for each configuration entry
-    async_add_entities([BlindsCover(entry)])
+    async_add_entities([BlindsCover(hass, entry)])
 
 class BlindsCover(CoverEntity):
-    def __init__(self, entry: ConfigEntry):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
+        self.hass = hass
         self.entry = entry
         self._state = None  # Initialize _state attribute
 
@@ -44,12 +45,22 @@ class BlindsCover(CoverEntity):
 
     async def _async_handle_command(self, command):
         if command == 'open_cover':
+            # If the cover is closing, stop it
+            if self._state == False:
+                await self.hass.services.async_call('homeassistant', 'turn_off', {
+                    'entity_id': self.entry.data["entity_down"],
+                }, False)
             await self.hass.services.async_call('homeassistant', 'turn_on', {
                 'entity_id': self.entry.data["entity_up"],
             }, False)
             self._state = True
 
         elif command == 'close_cover':
+            # If the cover is opening, stop it
+            if self._state == True:
+                await self.hass.services.async_call('homeassistant', 'turn_off', {
+                    'entity_id': self.entry.data["entity_up"],
+                }, False)
             await self.hass.services.async_call('homeassistant', 'turn_on', {
                 'entity_id': self.entry.data["entity_down"],
             }, False)
@@ -75,5 +86,3 @@ class BlindsCover(CoverEntity):
 
     async def async_stop_cover(self, **kwargs):
         await self._async_handle_command('stop_cover')
-
-    
