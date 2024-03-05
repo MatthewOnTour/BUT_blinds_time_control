@@ -1,6 +1,8 @@
+# Import necessary modules from Home Assistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
+# Import the domain constant from the current package
 from .const import DOMAIN
 
 async def async_setup(hass: HomeAssistant, config: dict):

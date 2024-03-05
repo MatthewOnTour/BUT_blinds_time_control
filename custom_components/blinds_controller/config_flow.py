@@ -1,6 +1,8 @@
+# Import necessary modules from Home Assistant
 from homeassistant import config_entries
 from homeassistant.core import callback
 import voluptuous as vol
+# Import the domain constant from the current package
 from .const import DOMAIN
 
 # Define the configuration flow for the blinds
