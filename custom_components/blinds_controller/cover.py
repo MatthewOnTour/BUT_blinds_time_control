@@ -7,6 +7,7 @@ from homeassistant.helpers.event import async_call_later
 # Import the domain constant from the current package
 from .const import DOMAIN
 
+
 # This function is called by Home Assistant to setup the component
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     # Create a new cover entity for each configuration entry
@@ -19,9 +20,8 @@ class BlindsCover(CoverEntity):
         self.entry = entry  # The configuration entry
         self._state = None  # Initialize _state attribute
         self._available = True  # Initialize _available attribute
-
         # Listen for state changes of the up and down switches
-        hass.bus.async_listen('state_changed', self.handle_state_change)
+        self.hass.bus.async_listen('state_changed', self.handle_state_change)
 
 
     # The unique ID of the entity is the ID of the configuration entry
@@ -71,42 +71,48 @@ class BlindsCover(CoverEntity):
         """Handle a state change event from Home Assistant."""
         # If the entity that changed is the up or down switch, update the state and availability
         if event.data['entity_id'] in [self.entry.data["entity_up"], self.entry.data["entity_down"]]:
+            # Get the new state of the entity
+            new_state = event.data['new_state'].state
+
+            if new_state == 'on':
+                # If the up switch turned on, turn off the down switch
+                if event.data['entity_id'] == self.entry.data["entity_up"]:
+                    await self.hass.services.async_call('homeassistant', 'turn_off', {
+                        'entity_id': self.entry.data["entity_down"],
+                    }, False)
+                # If the down switch turned on, turn off the up switch
+                elif event.data['entity_id'] == self.entry.data["entity_down"]:
+                    await self.hass.services.async_call('homeassistant', 'turn_off', {
+                        'entity_id': self.entry.data["entity_up"],
+                    }, False)
+
             await self.async_update()
 
 
 
     # This method handles commands to open, close, or stop the cover
     async def _async_handle_command(self, command):
+        # Turn off both switches
+        await self.hass.services.async_call('homeassistant', 'turn_off', {
+            'entity_id': self.entry.data["entity_up"],
+        }, False)
+        await self.hass.services.async_call('homeassistant', 'turn_off', {
+            'entity_id': self.entry.data["entity_down"],
+        }, False)
+
         if command == 'open_cover':
-            # If the cover is closing, stop it
-            if self._state == False:
-                await self.hass.services.async_call('homeassistant', 'turn_off', {
-                    'entity_id': self.entry.data["entity_down"],
-                }, False)
+            # Then turn on the up switch
             await self.hass.services.async_call('homeassistant', 'turn_on', {
                 'entity_id': self.entry.data["entity_up"],
             }, False)
             self._state = True
 
         elif command == 'close_cover':
-            # If the cover is opening, stop it
-            if self._state == True:
-                await self.hass.services.async_call('homeassistant', 'turn_off', {
-                    'entity_id': self.entry.data["entity_up"],
-                }, False)
+            # Then turn on the down switch
             await self.hass.services.async_call('homeassistant', 'turn_on', {
                 'entity_id': self.entry.data["entity_down"],
             }, False)
             self._state = False
-
-        elif command == 'stop_cover':
-            await self.hass.services.async_call('homeassistant', 'turn_off', {
-                'entity_id': self.entry.data["entity_up"],
-            }, False)
-            await self.hass.services.async_call('homeassistant', 'turn_off', {
-                'entity_id': self.entry.data["entity_down"],
-            }, False)
-            self._state = None
 
         # Update state of entity
         self.async_write_ha_state()
