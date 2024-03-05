@@ -1,20 +1,37 @@
 {
-	"config": {
-		"title": "Blinds configuration for Home Assistant",
-		"step": {
-			"user": {
-				"title": "Blinds configuration",
-				"description": "Initial configuration for the blinds component",
-				"data": {
-					"ent_name": "Custom Name of the blinds",
-					"entity_up": "Entity to control the up movement",
-					"entity_down": "Entity to control the down movement",
-					"time_up": "Time for the up movement in seconds",
-					"time_down": "Time for the down movement in seconds",
-					"tilt_open": "Time fo tilt angle for the open state from closed state in seconds",
-					"tilt_closed": "Time fo tilt angle for the closed state from open state in seconds"
-				}
-			}
-		}
-	}
+    "config": {
+        "title": "Blinds configuration for Home Assistant",
+        "step": {
+            "user": {
+                "title": "Blinds configuration",
+                "description": "Initial configuration for the blinds component",
+                "data": {
+                    "ent_name": "Custom Name of the blinds",
+                    "entity_up": "Entity to control the up movement",
+                    "entity_down": "Entity to control the down movement",
+                    "time_up": "Time for the up movement in seconds",
+                    "time_down": "Time for the down movement in seconds",
+                    "tilt_open": "Time for tilt angle for the open state from closed state in seconds",
+                    "tilt_closed": "Time for tilt angle for the closed state from open state in seconds"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Blinds options",
+                "description": "Update options for the blinds component",
+                "data": {
+                    "ent_name": "Custom Name of the blinds",
+                    "entity_up": "Entity to control the up movement",
+                    "entity_down": "Entity to control the down movement",
+                    "time_up": "Time for the up movement in seconds",
+                    "time_down": "Time for the down movement in seconds",
+                    "tilt_open": "Time for tilt angle for the open state from closed state in seconds",
+                    "tilt_closed": "Time for tilt angle for the closed state from open state in seconds"
+                }
+            }
+        }
+    }
 }
