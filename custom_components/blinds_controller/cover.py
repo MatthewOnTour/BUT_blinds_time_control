@@ -4,6 +4,58 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_call_later
 
+from xknx.devices import TravelStatus # Experimental
+from xknx.devices import TravelCalculator # Experimental
+from homeassistant.helpers import config_validation as cv
+# RestoreEntity is used to restore the state of the entity after a restart
+from homeassistant.helpers.restore_state import RestoreEntity
+from datetime import timedelta
+import voluptuous as vol
+# Used to schedule callbacks for specific time events
+from homeassistant.core import callback
+from homeassistant.helpers import entity_platform
+from homeassistant.helpers.event import (
+    async_track_utc_time_change,
+    async_track_time_interval,
+)
+
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    ATTR_CURRENT_TILT_POSITION,
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+    PLATFORM_SCHEMA,
+    DEVICE_CLASSES_SCHEMA,
+    CoverEntity,
+    CoverEntityFeature,
+)
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    ATTR_DEVICE_CLASS,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_STOP_COVER,
+)
+
+POSITION_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_POSITION): cv.positive_int,
+    }
+)
+TILT_POSITION_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_TILT_POSITION): cv.positive_int,
+    }
+)
+
+
+SERVICE_SET_KNOWN_POSITION = "set_known_position"
+SERVICE_SET_KNOWN_TILT_POSITION = "set_known_tilt_position"
+
 # Import the domain constant from the current package
 from .const import DOMAIN
 
@@ -13,8 +65,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     # Create a new cover entity for each configuration entry
     async_add_entities([BlindsCover(hass, entry)])
 
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_SET_KNOWN_POSITION, POSITION_SCHEMA, "set_known_position"
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_KNOWN_TILT_POSITION, TILT_POSITION_SCHEMA, "set_known_tilt_position"
+    )
+
 # This class represents a cover entity in Home Assistant
-class BlindsCover(CoverEntity):
+
+class BlindsCover(CoverEntity, RestoreEntity):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
         self.hass = hass    # The Home Assistant instance
         self.entry = entry  # The configuration entry
@@ -23,7 +85,26 @@ class BlindsCover(CoverEntity):
         # Listen for state changes of the up and down switches
         self.hass.bus.async_listen('state_changed', self.handle_state_change)
 
+        self._travel_time_down = self.entry.data["time_down"]
+        self._travel_time_up = self.entry.data["time_up"]
+        self._tilting_time_down = self.entry.data["tilt_closed"]	
+        self._tilting_time_up = self.entry.data["tilt_open"]
 
+        self.travel_calc = TravelCalculator(
+            self._travel_time_down,
+            self._travel_time_up,
+        )
+        if self._has_tilt_support():
+            self.tilt_calc = TravelCalculator(
+                self._tilting_time_down,
+                self._tilting_time_up,
+            )
+
+    
+
+    def _has_tilt_support(self):
+        """Return if cover has tilt support."""
+        return self._tilting_time_down is not None and self._tilting_time_up is not None
     # The unique ID of the entity is the ID of the configuration entry
     @property
     def unique_id(self):
@@ -47,24 +128,110 @@ class BlindsCover(CoverEntity):
             "tilt_open": self.entry.data["tilt_open"],
             "tilt_closed": self.entry.data["tilt_closed"],
         }
+    
+    async def async_added_to_hass(self):
+        """ Only cover position and confidence in that matters."""
+        """ The rest is calculated from this attribute.        """
+        old_state = await self.async_get_last_state()
+        if (
+            old_state is not None
+            and self.travel_calc is not None
+            and old_state.attributes.get(ATTR_CURRENT_POSITION) is not None
+        ):
+            self.travel_calc.set_position(
+                int(old_state.attributes.get(ATTR_CURRENT_POSITION))
+            )
+
+            if (
+                self._has_tilt_support()
+                and old_state.attributes.get(ATTR_CURRENT_TILT_POSITION) is not None
+            ):
+                self.tilt_calc.set_position(
+                    int(old_state.attributes.get(ATTR_CURRENT_TILT_POSITION))
+                )
+
+    def _handle_stop(self):
+        if self.travel_calc.is_traveling():
+            self.travel_calc.stop()
+            self.stop_auto_updater()
+
+        if self.tilt_calc.is_traveling():
+            self.tilt_calc.stop()
+            self.stop_auto_updater()
 
     # The cover is considered closed if _state is False
     @property
-    def is_closed(self):
-        if self._state is None:
-            return None
-        return not self._state
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        from xknx.devices import TravelStatus
+
+        return (
+            self.travel_calc.is_traveling()
+            and self.travel_calc.travel_direction == TravelStatus.DIRECTION_DOWN
+        ) or (
+            self._has_tilt_support()
+            and self.tilt_calc.is_traveling()
+            and self.tilt_calc.travel_direction == TravelStatus.DIRECTION_DOWN
+        )
     
     # The cover is considered moving if _state is True
     @property
-    def is_moving(self):
-        return self._state
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        return (
+            self.travel_calc.is_traveling()
+            and self.travel_calc.travel_direction == TravelStatus.DIRECTION_UP
+        ) or (
+            self._has_tilt_support()
+            and self.tilt_calc.is_traveling()
+            and self.tilt_calc.travel_direction == TravelStatus.DIRECTION_UP
+        )
+    
+    @property
+    def supported_features(self) -> CoverEntityFeature:
+        """Flag supported features."""
+        supported_features = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+        )
+        if self.current_cover_position is not None:
+            supported_features |= CoverEntityFeature.SET_POSITION
+
+        if self._has_tilt_support():
+            supported_features |= (
+                CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.STOP_TILT
+            )
+            if self.current_cover_tilt_position is not None:
+                supported_features |= CoverEntityFeature.SET_TILT_POSITION
+
+        return supported_features
+    
+    @property
+    def is_closed(self):
+        """Return if the cover is closed."""
+        return self.travel_calc.is_closed()
+
+    @property
+    def assumed_state(self):
+        """Return True because covers can be stopped midway."""
+        return True
 
     # The cover is available if _available is True
     @property
     def available(self):
         """Return True if entity is available."""
         return self._available
+    
+    @property
+    def current_cover_position(self) -> int | None:
+        """Return the current position of the cover."""
+        return self.travel_calc.current_position()
+
+    @property
+    def current_cover_tilt_position(self) -> int | None:
+        """Return the current tilt of the cover."""
+        return self.tilt_calc.current_position()
 
     # This method is called when the state of the up or down switch changes
     async def handle_state_change(self, event):
