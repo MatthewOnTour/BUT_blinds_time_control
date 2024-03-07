@@ -84,7 +84,8 @@ class BlindsCover(CoverEntity, RestoreEntity):
         self._available = True  # Initialize _available attribute
         # Listen for state changes of the up and down switches
         self.hass.bus.async_listen('state_changed', self.handle_state_change)
-
+                # Initialize _unsubscribe_auto_updater to None
+        self._unsubscribe_auto_updater = None
         self._travel_time_down = self.entry.data["time_down"]
         self._travel_time_up = self.entry.data["time_up"]
         self._tilting_time_down = self.entry.data["tilt_closed"]	
@@ -103,8 +104,8 @@ class BlindsCover(CoverEntity, RestoreEntity):
     
 
     def _has_tilt_support(self):
-        """Return if cover has tilt support."""
-        return self._tilting_time_down is not None and self._tilting_time_up is not None
+        return self._tilting_time_down != 0 and self._tilting_time_up is not None
+    
     # The unique ID of the entity is the ID of the configuration entry
     @property
     def unique_id(self):
@@ -188,6 +189,26 @@ class BlindsCover(CoverEntity, RestoreEntity):
         )
     
     @property
+    def is_closed(self):
+        """Return if the cover is closed."""
+        return self.travel_calc.is_closed()
+    
+    @property
+    def assumed_state(self):
+        """Return True because covers can be stopped midway."""
+        return True
+    
+    @property
+    def current_cover_position(self) -> int | None:
+        """Return the current position of the cover."""
+        return self.travel_calc.current_position()
+
+    @property
+    def current_cover_tilt_position(self) -> int | None:
+        """Return the current tilt of the cover."""
+        return self.tilt_calc.current_position()
+
+    @property
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         supported_features = (
@@ -207,16 +228,6 @@ class BlindsCover(CoverEntity, RestoreEntity):
 
         return supported_features
     
-    @property
-    def is_closed(self):
-        """Return if the cover is closed."""
-        return self.travel_calc.is_closed()
-
-    @property
-    def assumed_state(self):
-        """Return True because covers can be stopped midway."""
-        return True
-
     # The cover is available if _available is True
     @property
     def available(self):
@@ -232,6 +243,185 @@ class BlindsCover(CoverEntity, RestoreEntity):
     def current_cover_tilt_position(self) -> int | None:
         """Return the current tilt of the cover."""
         return self.tilt_calc.current_position()
+
+    
+    async def async_set_cover_position(self, **kwargs):
+        """Move the cover to a specific position."""
+        if ATTR_POSITION in kwargs:
+            position = kwargs[ATTR_POSITION]
+            await self.set_position(position)
+
+    async def async_set_cover_tilt_position(self, **kwargs):
+        """Move the cover tilt to a specific position."""
+        if ATTR_TILT_POSITION in kwargs:
+            position = kwargs[ATTR_TILT_POSITION]
+            await self.set_tilt_position(position)
+    
+    async def async_open_cover(self, **kwargs):
+        """Turn the device open."""
+        if self.travel_calc.current_position() < 100:
+            self.travel_calc.start_travel_up()
+            self.start_auto_updater()
+            self._update_tilt_before_travel(SERVICE_OPEN_COVER)
+            await self._async_handle_command(SERVICE_OPEN_COVER)
+
+    async def async_close_cover_tilt(self, **kwargs):
+        """Turn the device close."""
+        if self.tilt_calc.current_position() > 0:
+            self.tilt_calc.start_travel_down()
+            self.start_auto_updater()
+            await self._async_handle_command(SERVICE_CLOSE_COVER)
+
+    async def async_open_cover_tilt(self, **kwargs):
+        """Turn the device open."""
+        if self.tilt_calc.current_position() < 100:
+            self.tilt_calc.start_travel_up()
+            self.start_auto_updater()
+            await self._async_handle_command(SERVICE_OPEN_COVER)
+
+    async def async_stop_cover(self, **kwargs):
+        """Turn the device stop."""
+        self._handle_stop()
+        await self._async_handle_command(SERVICE_STOP_COVER)
+
+    async def set_position(self, position):
+        """Move cover to a designated position."""
+        current_position = self.travel_calc.current_position()
+        command = None
+        if position < current_position:
+            command = SERVICE_CLOSE_COVER
+        elif position > current_position:
+            command = SERVICE_OPEN_COVER
+        if command is not None:
+            self.start_auto_updater()
+            self.travel_calc.start_travel(position)
+            self._update_tilt_before_travel(command)
+            await self._async_handle_command(command)
+        return
+
+    async def set_tilt_position(self, position):
+        """Move cover tilt to a designated position."""
+        current_position = self.tilt_calc.current_position()
+        command = None
+        if position < current_position:
+            command = SERVICE_CLOSE_COVER
+        elif position > current_position:
+            command = SERVICE_OPEN_COVER
+        if command is not None:
+            self.start_auto_updater()
+            self.tilt_calc.start_travel(position)
+            await self._async_handle_command(command)
+        return
+
+    def start_auto_updater(self):
+        """Start the autoupdater to update HASS while cover is moving."""
+        if self._unsubscribe_auto_updater is None:
+            interval = timedelta(seconds=0.1)
+            self._unsubscribe_auto_updater = async_track_time_interval(
+                self.hass, self.auto_updater_hook, interval
+            )
+
+    @callback
+    def auto_updater_hook(self, now):
+        """Call for the autoupdater."""
+        self.async_schedule_update_ha_state()
+        if self.position_reached():
+            self.stop_auto_updater()
+        self.hass.async_create_task(self.auto_stop_if_necessary())
+
+    def stop_auto_updater(self):
+        """Stop the autoupdater."""
+        if self._unsubscribe_auto_updater is not None:
+            self._unsubscribe_auto_updater()
+            self._unsubscribe_auto_updater = None
+
+    def position_reached(self):
+        """Return if cover has reached its final position."""
+        return self.travel_calc.position_reached() and (
+            not self._has_tilt_support() or self.tilt_calc.position_reached()
+        )
+
+    def _has_tilt_support(self):
+        """Return if cover has tilt support."""
+        return self._tilting_time_down is not None and self._tilting_time_up is not None
+
+    def _update_tilt_before_travel(self, command):
+        """Updating tilt before travel."""
+        if self._has_tilt_support():
+            if command == SERVICE_OPEN_COVER:
+                self.tilt_calc.set_position(100)
+            elif command == SERVICE_CLOSE_COVER:
+                self.tilt_calc.set_position(0)
+
+    async def auto_stop_if_necessary(self):
+        """Do auto stop if necessary."""
+        if self.position_reached():
+            self.travel_calc.stop()
+            if self._has_tilt_support():
+                self.tilt_calc.stop()
+            await self._async_handle_command(SERVICE_STOP_COVER)
+
+    async def set_known_position(self, **kwargs):
+        """We want to do a few things when we get a position"""
+        position = kwargs[ATTR_POSITION]
+        self._handle_stop()
+        await self._async_handle_command(SERVICE_STOP_COVER)
+        self.travel_calc.set_position(position)
+
+    async def set_known_tilt_position(self, **kwargs):
+        """We want to do a few things when we get a position"""
+        position = kwargs[ATTR_TILT_POSITION]
+        await self._async_handle_command(SERVICE_STOP_COVER)
+        self.tilt_calc.set_position(position)
+
+    async def _async_handle_command(self, command, *args):
+        if command == SERVICE_CLOSE_COVER:
+            cmd = "DOWN"
+            self._state = False
+            await self.hass.services.async_call(
+                "homeassistant",
+                "turn_off",
+                {"entity_id": self.entry.data["entity_up"]},
+                False,
+            )
+            await self.hass.services.async_call(
+                "homeassistant",
+                "turn_on",
+                {"entity_id": self.entry.data["entity_down"]},
+                False,
+            )
+
+        elif command == SERVICE_OPEN_COVER:
+            cmd = "UP"
+            self._state = True
+            await self.hass.services.async_call(
+                "homeassistant",
+                "turn_off",
+                {"entity_id": self.entry.data["entity_down"]},
+                False,
+            )
+            await self.hass.services.async_call(
+                "homeassistant",
+                "turn_on",
+                {"entity_id": self.entry.data["entity_up"]},
+                False,
+            )
+
+        elif command == SERVICE_STOP_COVER:
+            cmd = "STOP"
+            self._state = True
+            await self.hass.services.async_call(
+                "homeassistant",
+                "turn_off",
+                {"entity_id": self.entry.data["entity_down"]},
+                False,
+            )
+            await self.hass.services.async_call(
+                "homeassistant",
+                "turn_off",
+                {"entity_id": self.entry.data["entity_up"]},
+                False,
+            )
 
     # This method is called when the state of the up or down switch changes
     async def handle_state_change(self, event):
