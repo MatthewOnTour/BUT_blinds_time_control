@@ -1,12 +1,19 @@
 # Import necessary modules from Home Assistant
-from homeassistant.components.cover import CoverEntity
+from homeassistant.components.cover import (
+    CoverEntity,
+    CoverEntityFeature,
+)
+import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_call_later
+from .calculator import TravelCalculator
+from .calculator import TravelStatus
 
 # Import the domain constant from the current package
 from .const import DOMAIN
 
+logger = logging.getLogger(__name__)
 
 # This function is called by Home Assistant to setup the component
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
@@ -22,6 +29,16 @@ class BlindsCover(CoverEntity):
         self._available = True  # Initialize _available attribute
         # Listen for state changes of the up and down switches
         self.hass.bus.async_listen('state_changed', self.handle_state_change)
+
+        self.travel_calc = TravelCalculator(
+            self.entry.data["time_down"],
+            self.entry.data["time_up"],
+        )
+        if self._has_tilt_support():
+            self.tilt_calc = TravelCalculator(
+                self.entry.data["tilt_closed"],
+                self.entry.data["tilt_open"],
+            )
 
 
     # The unique ID of the entity is the ID of the configuration entry
@@ -47,6 +64,37 @@ class BlindsCover(CoverEntity):
             "tilt_open": self.entry.data["tilt_open"],
             "tilt_closed": self.entry.data["tilt_closed"],
         }
+    
+    @property
+    def supported_features(self) -> CoverEntityFeature:
+        """Flag supported features."""
+        supported_features = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+        )
+        if self.current_cover_position is not None:
+            supported_features |= CoverEntityFeature.SET_POSITION
+
+        if self._has_tilt_support():
+            supported_features |= (
+                CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.STOP_TILT
+            )
+            if self.current_cover_tilt_position is not None:
+                supported_features |= CoverEntityFeature.SET_TILT_POSITION
+
+        return supported_features
+    
+    @property
+    def current_cover_position(self) -> int | None:
+        """Return the current position of the cover."""
+        return self.travel_calc.current_position()
+
+    @property
+    def current_cover_tilt_position(self) -> int | None:
+        """Return the current tilt of the cover."""
+        return self.tilt_calc.current_position()
+        
 
     # The cover is considered closed if _state is False
     @property
@@ -65,6 +113,11 @@ class BlindsCover(CoverEntity):
     def available(self):
         """Return True if entity is available."""
         return self._available
+    
+
+    def _has_tilt_support(self):
+        """Return True if the cover supports tilt, False otherwise."""
+        return self.entry.data["tilt_open"] != 0 and self.entry.data["tilt_closed"] != 0
 
     # This method is called when the state of the up or down switch changes
     async def handle_state_change(self, event):
