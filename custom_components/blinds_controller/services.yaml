@@ -1,0 +1,12 @@
+set_known_position:
+  fields:
+    entity_id:
+      example: cover.blinds
+    position:
+      example: 50
+set_known_tilt_position:
+  fields:
+    entity_id:
+      example: cover.blinds
+    position:
+      example: 50
