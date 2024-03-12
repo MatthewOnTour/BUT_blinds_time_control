@@ -1,8 +1,7 @@
 # TODO add-ons weather date of the time or sunset and sundown automations
-# TODO sync with other entities
-# TODO clean up
+# TODO fix if controling from outside tilting works better... not up instantly...
 # TODO fix the tilt support. so if the tilt is not supported, it should not be shown in the UI
-
+# TODO the availablity of the cover if entity is not available
 
 # Import necessary modules from Home Assistant
 from homeassistant.components.cover import (
@@ -39,7 +38,7 @@ from .calculator import TravelStatus
 from .const import DOMAIN
 
 # Logger for debuggind purposes
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 # The service names for setting the known position and tilt position
 # Keep same as in services.yaml
@@ -414,26 +413,35 @@ class BlindsCover(CoverEntity, RestoreEntity):
 
 
     # This function is called when the state of the up or down switch changes
-    # and assures that the opposite switch is turned off
-    # (example: if the 'up' switch is turned on, the 'down' switch is turned off and vice versa)
     async def handle_state_change(self, event):
             # Check if the entity that changed state is either the 'up' or 'down' entity
             if event.data['entity_id'] in [self.entry.data["entity_up"], self.entry.data["entity_down"]]:
-                # Get the new state of the entity that changed
-                new_state = event.data['new_state'].state
 
-                # If the new state is 'on', we need to turn off the opposite entity
-                if new_state == 'on':
-                    # If the 'up' entity turned on, turn off the 'down' entity
+                # This takes care of the case when the 'up' or 'down' is triggreed from outside of the integration
+                if not self.tilt_calc.is_traveling():     
                     if event.data['entity_id'] == self.entry.data["entity_up"]:
-                        await self.hass.services.async_call('homeassistant', 'turn_off', {
-                            'entity_id': self.entry.data["entity_down"],
-                        }, False)
-                    # If the 'down' entity turned on, turn off the 'up' entity
+                        if event.data['new_state'].state == 'on':
+                            if self.travel_calc.current_position() < 100:
+                                self.travel_calc.start_travel_up()
+                                self.start_auto_updater()
+                                self.update_tilt_before_travel(SERVICE_OPEN_COVER)
+                                await self.handle_command(SERVICE_OPEN_COVER)
+                        elif event.data['new_state'].state == 'off':
+                            _LOGGER.debug("STOP UP")
+                            self.handle_stop()
+                            await self.handle_command(SERVICE_STOP_COVER)
                     elif event.data['entity_id'] == self.entry.data["entity_down"]:
-                        await self.hass.services.async_call('homeassistant', 'turn_off', {
-                            'entity_id': self.entry.data["entity_up"],
-                        }, False)
+                        if event.data['new_state'].state == 'on':
+                            if self.travel_calc.current_position() > 0:
+                                self.travel_calc.start_travel_down()
+                                self.start_auto_updater()
+                                self.update_tilt_before_travel(SERVICE_CLOSE_COVER)
+                                await self.handle_command(SERVICE_CLOSE_COVER)
+                        elif event.data['new_state'].state == 'off':
+                            _LOGGER.debug("STOP DOWN")
+                            self.handle_stop()
+                            await self.handle_command(SERVICE_STOP_COVER)
+                
 
 
     # This function is called by Home Assistant to restore the state of the cover
