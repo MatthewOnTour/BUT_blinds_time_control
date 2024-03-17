@@ -70,6 +70,8 @@ class BlindsCover(CoverEntity, RestoreEntity):
         self.entry = entry  # The configuration entry
         self._state = None  # Initialize _state attribute
         self._available = True  # Initialize _available attribute
+        self._setting_position_manually = False  # Initialize _setting_position_manually attribute
+        self._setting_tilt_manually = False  # Initialize _setting_tilt_manually attribute
         # Listen for state changes of the up and down switches
         self.hass.bus.async_listen('state_changed', self.handle_state_change)
 
@@ -194,14 +196,22 @@ class BlindsCover(CoverEntity, RestoreEntity):
     # This function is called to set the position of the cover
     async def async_set_cover_position(self, **kwargs):
         if ATTR_POSITION in kwargs:
+            # Set a flag to indicate that position is being set manually
+            self._setting_position_manually = True
             position = kwargs[ATTR_POSITION]
             await self.set_position(position)
+            # Reset the flag after setting position
+            self._setting_position_manually = False
 
     # This function is called to set the position of the covers tilt
     async def async_set_cover_tilt_position(self, **kwargs):
         if ATTR_TILT_POSITION in kwargs:
+            # Set the flag to indicate manual tilt adjustment
+            self._setting_tilt_manually = True
             position = kwargs[ATTR_TILT_POSITION]
             await self.set_tilt_position(position)
+            # Reset the flag after setting position
+            self._setting_tilt_manually = False
 
     # This function is called to set the cover to start closing
     async def async_close_cover(self, **kwargs):
@@ -273,6 +283,7 @@ class BlindsCover(CoverEntity, RestoreEntity):
 
     # This function is called to move the cover tilt to a designated position
     async def set_tilt_position(self, position):
+
         # Get the current tilt position
         current_position = self.tilt_calc.current_position()
         command = None
@@ -291,8 +302,6 @@ class BlindsCover(CoverEntity, RestoreEntity):
             self.tilt_calc.start_travel(position)
             # Execute the open or close command
             await self.handle_command(command)
-
-        # The function does not return anything
         return
     
     # Stop the autoupdater
@@ -361,6 +370,7 @@ class BlindsCover(CoverEntity, RestoreEntity):
 
     # This function is called when the state of the up or down switch changes
     async def handle_command(self, command, *args):
+        
         if command == SERVICE_CLOSE_COVER:
             self._state = False
             # Turn off the 'up' entity
@@ -414,33 +424,34 @@ class BlindsCover(CoverEntity, RestoreEntity):
 
     # This function is called when the state of the up or down switch changes
     async def handle_state_change(self, event):
-            # Check if the entity that changed state is either the 'up' or 'down' entity
-            if event.data['entity_id'] in [self.entry.data["entity_up"], self.entry.data["entity_down"]]:
+        # If the cover is not moving and not manually setting position or tilt
+        if (
+            not self.travel_calc.is_traveling()
+            and not self.tilt_calc.is_traveling()
+            and not self._setting_position_manually
+            and not self._setting_tilt_manually
+        ):
+            # Handle the 'up' and 'down' events
+            if event.data['entity_id'] == self.entry.data["entity_up"]:
+                if event.data['new_state'].state == 'on':
+                    if self.travel_calc.current_position() < 100:
+                        self.travel_calc.start_travel_up()
+                        self.start_auto_updater()
+                        self.update_tilt_before_travel(SERVICE_OPEN_COVER)
+                        await self.handle_command(SERVICE_OPEN_COVER)
+            elif event.data['entity_id'] == self.entry.data["entity_down"]:
+                if event.data['new_state'].state == 'on':
+                    if self.travel_calc.current_position() > 0:
+                        self.travel_calc.start_travel_down()
+                        self.start_auto_updater()
+                        self.update_tilt_before_travel(SERVICE_CLOSE_COVER)
+                        await self.handle_command(SERVICE_CLOSE_COVER)
 
-                # This takes care of the case when the 'up' or 'down' is triggreed from outside of the integration
-                if not self.tilt_calc.is_traveling():     
-                    if event.data['entity_id'] == self.entry.data["entity_up"]:
-                        if event.data['new_state'].state == 'on':
-                            if self.travel_calc.current_position() < 100:
-                                self.travel_calc.start_travel_up()
-                                self.start_auto_updater()
-                                self.update_tilt_before_travel(SERVICE_OPEN_COVER)
-                                await self.handle_command(SERVICE_OPEN_COVER)
-                        elif event.data['new_state'].state == 'off':
-                            _LOGGER.debug("STOP UP")
-                            self.handle_stop()
-                            await self.handle_command(SERVICE_STOP_COVER)
-                    elif event.data['entity_id'] == self.entry.data["entity_down"]:
-                        if event.data['new_state'].state == 'on':
-                            if self.travel_calc.current_position() > 0:
-                                self.travel_calc.start_travel_down()
-                                self.start_auto_updater()
-                                self.update_tilt_before_travel(SERVICE_CLOSE_COVER)
-                                await self.handle_command(SERVICE_CLOSE_COVER)
-                        elif event.data['new_state'].state == 'off':
-                            _LOGGER.debug("STOP DOWN")
-                            self.handle_stop()
-                            await self.handle_command(SERVICE_STOP_COVER)
+        # Always handle the 'off' event, even if the cover is moving
+        if event.data['new_state'].state == 'off':
+            self.handle_stop()
+            await self.handle_command(SERVICE_STOP_COVER)
+
                 
 
 
