@@ -225,33 +225,43 @@ class BlindsCover(CoverEntity, RestoreEntity):
 
     # This function is called to set the cover to start closing
     async def async_close_cover(self, **kwargs):
-        if self.travel_calc.current_position() > 0:
+        if self.travel_calc.current_position() > 0 and not self.travel_calc.is_traveling() and not self.tilt_calc.is_traveling():
             self.travel_calc.start_travel_down()
             self.start_auto_updater()
-            self.update_tilt_before_travel(SERVICE_CLOSE_COVER)
             await self.handle_command(SERVICE_CLOSE_COVER)
+        else:
+            self.handle_stop()
+            await self.handle_command(SERVICE_STOP_COVER)
 
     # This function is called to set the cover to start opening 
     async def async_open_cover(self, **kwargs):
-        if self.travel_calc.current_position() < 100:
+        if self.travel_calc.current_position() < 100 and not self.travel_calc.is_traveling() and not self.tilt_calc.is_traveling():
             self.travel_calc.start_travel_up()
             self.start_auto_updater()
-            self.update_tilt_before_travel(SERVICE_OPEN_COVER)
             await self.handle_command(SERVICE_OPEN_COVER)
+        else:
+            self.handle_stop()
+            await self.handle_command(SERVICE_STOP_COVER)
 
     # This function is called to move the cover tilting to close position
     async def async_close_cover_tilt(self, **kwargs):
-        if self.tilt_calc.current_position() > 0:
+        if self.tilt_calc.current_position() > 0 and not self.travel_calc.is_traveling() and not self.tilt_calc.is_traveling():
             self.tilt_calc.start_travel_down()
             self.start_auto_updater()
             await self.handle_command(SERVICE_CLOSE_COVER)
+        else:
+            self.handle_stop()
+            await self.handle_command(SERVICE_STOP_COVER)
 
     # This function is called to stop the cover tilting to open position
     async def async_open_cover_tilt(self, **kwargs):
-        if self.tilt_calc.current_position() < 100:
+        if self.tilt_calc.current_position() < 100 and not self.travel_calc.is_traveling() and not self.tilt_calc.is_traveling():
             self.tilt_calc.start_travel_up()
             self.start_auto_updater()
             await self.handle_command(SERVICE_OPEN_COVER)
+        else:
+            self.handle_stop()
+            await self.handle_command(SERVICE_STOP_COVER)
 
     # This function is called to stop the cover from moving
     async def async_stop_cover(self, **kwargs):
