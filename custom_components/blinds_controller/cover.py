@@ -2,6 +2,7 @@
 # TODO fix if controling from outside tilting works better... not up instantly...
 # TODO fix the tilt support. so if the tilt is not supported, it should not be shown in the UI
 # TODO the availablity of the cover if entity is not available
+# TODO make ui smoother
 
 # Import necessary modules from Home Assistant
 from homeassistant.components.cover import (
@@ -27,6 +28,7 @@ from homeassistant.helpers.event import async_track_time_interval
 # Import the logger and datetime modules
 import logging
 from datetime import timedelta
+import asyncio
 
 # Import the TravelCalculator and TravelStatus classes from the calculator module
 # Currently using the:
@@ -195,23 +197,31 @@ class BlindsCover(CoverEntity, RestoreEntity):
 
     # This function is called to set the position of the cover
     async def async_set_cover_position(self, **kwargs):
-        if ATTR_POSITION in kwargs:
+        if ATTR_POSITION in kwargs and self.travel_calc.is_traveling() and self._setting_position_manually:
+            _LOGGER.info("Cover is already in motion, cannot set new position while moving")
+            return
+        else:
             # Set a flag to indicate that position is being set manually
             self._setting_position_manually = True
             position = kwargs[ATTR_POSITION]
             await self.set_position(position)
             # Reset the flag after setting position
+            await asyncio.sleep(1)
             self._setting_position_manually = False
 
-    # This function is called to set the position of the covers tilt
     async def async_set_cover_tilt_position(self, **kwargs):
-        if ATTR_TILT_POSITION in kwargs:
+        if ATTR_TILT_POSITION in kwargs and self.tilt_calc.is_traveling() and self._setting_tilt_manually:
+            _LOGGER.info("Cover tilt is already in motion, cannot set new position while moving")
+            return
+        else:
             # Set the flag to indicate manual tilt adjustment
             self._setting_tilt_manually = True
             position = kwargs[ATTR_TILT_POSITION]
             await self.set_tilt_position(position)
             # Reset the flag after setting position
+            await asyncio.sleep(1)
             self._setting_tilt_manually = False
+
 
     # This function is called to set the cover to start closing
     async def async_close_cover(self, **kwargs):
