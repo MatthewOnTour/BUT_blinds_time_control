@@ -31,7 +31,7 @@ from datetime import timedelta
 import asyncio
 import time
 
-DEBOUNCE_DELAY = 0.03 
+DEBOUNCE_DELAY = 0.03
 
 # Import the TravelCalculator and TravelStatus classes from the calculator module
 # Currently using the:
@@ -441,46 +441,59 @@ class BlindsCover(CoverEntity, RestoreEntity):
         current_time = time.time()
         elapsed_time = current_time - self.last_trigger_time
 
-        # Handle the 'up' and 'down' events
+                # Check if the elapsed time is greater than the debounce delay
+        if elapsed_time < DEBOUNCE_DELAY:
+            # If the elapsed time is less than the debounce delay, ignore the trigger event
+            return
+
+        # Check if both entities are being turned on at the same time
+        if (event.data['new_state'].state == 'on' and
+                event.data['entity_id'] in [self.entry.data["entity_up"], self.entry.data["entity_down"]]):
+            # If one entity is already on, turn off the other entity
+            if event.data['entity_id'] == self.entry.data["entity_up"]:
+                other_entity_id = self.entry.data["entity_down"]
+            else:
+                other_entity_id = self.entry.data["entity_up"]
+
+            # Check if the other entity is already on
+            other_entity_state = self.hass.states.get(other_entity_id)
+            if other_entity_state is not None and other_entity_state.state == 'on':
+                # If the other entity is on, turn it off
+                await self.hass.services.async_call(
+                    "homeassistant",
+                    "turn_off",
+                    {"entity_id": other_entity_id},
+                    blocking=True,
+                )
+
+                # Update the corresponding travel calculator
+                if other_entity_id == self.entry.data["entity_up"]:
+                    self.travel_calc.stop()
+
+                elif other_entity_id == self.entry.data["entity_down"]:
+                    self.travel_calc.stop()
+            
+
         if self.has_tilt_support():
-            # Check if the elapsed time is greater than the debounce delay
-            if elapsed_time < DEBOUNCE_DELAY:
-                # If the elapsed time is less than the debounce delay, ignore the trigger event
-                return
             if not self.travel_calc.is_traveling() and not self.tilt_calc.is_traveling():
                 if event.data['entity_id'] == self.entry.data["entity_up"]:
                     _LOGGER.debug("TRAVELING UP")
-                    if event.data['new_state'].state == 'on' and self.hass.states.get(self.entry.data["entity_down"]).state == 'on':
-                        self.handle_stop()
-                        await self.async_open_cover()
-                    elif event.data['new_state'].state == 'on':
+                    if event.data['new_state'].state == 'on':
                         await self.async_open_cover()
                 elif event.data['entity_id'] == self.entry.data["entity_down"]:
                     _LOGGER.debug("TRAVELING DOWN")
-                    if event.data['new_state'].state == 'on' and self.hass.states.get(self.entry.data["entity_up"]).state == 'on':
-                        self.handle_stop()
-                        await self.async_close_cover()
-                    elif event.data['new_state'].state == 'on':
+                    if event.data['new_state'].state == 'on':
                         await self.async_close_cover()
         else:
-            # Check if the elapsed time is greater than the debounce delay
-            if elapsed_time < DEBOUNCE_DELAY:
-                # If the elapsed time is less than the debounce delay, ignore the trigger event
-                return
-            if event.data['entity_id'] == self.entry.data["entity_up"]:
-                _LOGGER.debug("TRAVELING UP")
-                if event.data['new_state'].state == 'on' and self.hass.states.get(self.entry.data["entity_down"]).state == 'on':
-                    self.handle_stop()
-                    await self.async_open_cover()
-                elif event.data['new_state'].state == 'on':
-                    await self.async_open_cover()
-            elif event.data['entity_id'] == self.entry.data["entity_down"]:
-                _LOGGER.debug("TRAVELING DOWN")
-                if event.data['new_state'].state == 'on' and self.hass.states.get(self.entry.data["entity_up"]).state == 'on':
-                    self.handle_stop()
-                    await self.async_close_cover()
-                elif event.data['new_state'].state == 'on':
-                    await self.async_close_cover()
+            if not self.travel_calc.is_traveling():
+                if event.data['entity_id'] == self.entry.data["entity_up"]:
+                    _LOGGER.debug("TRAVELING UP")
+                    if event.data['new_state'].state == 'on':
+                        await self.async_open_cover()
+                elif event.data['entity_id'] == self.entry.data["entity_down"]:
+                    _LOGGER.debug("TRAVELING DOWN")
+                    if event.data['new_state'].state == 'on':
+                        await self.async_close_cover()
 
         # Always handle the 'off' event, even if the cover is moving
         if event.data['new_state'].state == 'off':
@@ -490,9 +503,7 @@ class BlindsCover(CoverEntity, RestoreEntity):
                 self.tilt_calc.stop()
             await self.handle_command(SERVICE_STOP_COVER)
 
-        
         self.last_trigger_time = current_time
-
 
 
     # This function is called by Home Assistant to restore the state of the cover
