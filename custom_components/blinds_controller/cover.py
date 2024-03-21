@@ -28,6 +28,10 @@ from homeassistant.helpers.event import async_track_time_interval
 # Import the logger and datetime modules
 import logging
 from datetime import timedelta
+import asyncio
+import time
+
+DEBOUNCE_DELAY = 0.03 
 
 # Import the TravelCalculator and TravelStatus classes from the calculator module
 # Currently using the:
@@ -39,7 +43,7 @@ from .calculator import TravelStatus
 from .const import DOMAIN
 
 # Logger for debuggind purposes
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 # The service names for setting the known position and tilt position
 # Keep same as in services.yaml
@@ -88,6 +92,11 @@ class BlindsCover(CoverEntity, RestoreEntity):
 
 
         self._unsubscribe_auto_updater = None
+
+        self.last_trigger_time = 0
+
+        # Listen for state changes of the up and down switches
+        self.hass.bus.async_listen('state_changed', self.handle_state_change)
 
     # The unique ID of the entity is the ID of the configuration entry
     @property
@@ -427,27 +436,63 @@ class BlindsCover(CoverEntity, RestoreEntity):
             )
 
 
-    # This function is called when the state of the up or down switch changes
-    # and assures that the opposite switch is turned off
-    # (example: if the 'up' switch is turned on, the 'down' switch is turned off and vice versa)
     async def handle_state_change(self, event):
-            # Check if the entity that changed state is either the 'up' or 'down' entity
-            if event.data['entity_id'] in [self.entry.data["entity_up"], self.entry.data["entity_down"]]:
-                # Get the new state of the entity that changed
-                new_state = event.data['new_state'].state
+        # Calculate the elapsed time since the last trigger event
+        current_time = time.time()
+        elapsed_time = current_time - self.last_trigger_time
 
-                # If the new state is 'on', we need to turn off the opposite entity
-                if new_state == 'on':
-                    # If the 'up' entity turned on, turn off the 'down' entity
-                    if event.data['entity_id'] == self.entry.data["entity_up"]:
-                        await self.hass.services.async_call('homeassistant', 'turn_off', {
-                            'entity_id': self.entry.data["entity_down"],
-                        }, False)
-                    # If the 'down' entity turned on, turn off the 'up' entity
-                    elif event.data['entity_id'] == self.entry.data["entity_down"]:
-                        await self.hass.services.async_call('homeassistant', 'turn_off', {
-                            'entity_id': self.entry.data["entity_up"],
-                        }, False)
+        # Handle the 'up' and 'down' events
+        if self.has_tilt_support():
+            # Check if the elapsed time is greater than the debounce delay
+            if elapsed_time < DEBOUNCE_DELAY:
+                # If the elapsed time is less than the debounce delay, ignore the trigger event
+                return
+            if not self.travel_calc.is_traveling() and not self.tilt_calc.is_traveling():
+                if event.data['entity_id'] == self.entry.data["entity_up"]:
+                    _LOGGER.debug("TRAVELING UP")
+                    if event.data['new_state'].state == 'on' and self.hass.states.get(self.entry.data["entity_down"]).state == 'on':
+                        self.handle_stop()
+                        await self.async_open_cover()
+                    elif event.data['new_state'].state == 'on':
+                        await self.async_open_cover()
+                elif event.data['entity_id'] == self.entry.data["entity_down"]:
+                    _LOGGER.debug("TRAVELING DOWN")
+                    if event.data['new_state'].state == 'on' and self.hass.states.get(self.entry.data["entity_up"]).state == 'on':
+                        self.handle_stop()
+                        await self.async_close_cover()
+                    elif event.data['new_state'].state == 'on':
+                        await self.async_close_cover()
+        else:
+            # Check if the elapsed time is greater than the debounce delay
+            if elapsed_time < DEBOUNCE_DELAY:
+                # If the elapsed time is less than the debounce delay, ignore the trigger event
+                return
+            if event.data['entity_id'] == self.entry.data["entity_up"]:
+                _LOGGER.debug("TRAVELING UP")
+                if event.data['new_state'].state == 'on' and self.hass.states.get(self.entry.data["entity_down"]).state == 'on':
+                    self.handle_stop()
+                    await self.async_open_cover()
+                elif event.data['new_state'].state == 'on':
+                    await self.async_open_cover()
+            elif event.data['entity_id'] == self.entry.data["entity_down"]:
+                _LOGGER.debug("TRAVELING DOWN")
+                if event.data['new_state'].state == 'on' and self.hass.states.get(self.entry.data["entity_up"]).state == 'on':
+                    self.handle_stop()
+                    await self.async_close_cover()
+                elif event.data['new_state'].state == 'on':
+                    await self.async_close_cover()
+
+        # Always handle the 'off' event, even if the cover is moving
+        if event.data['new_state'].state == 'off':
+            _LOGGER.debug("STOPPING")
+            self.travel_calc.stop()
+            if self.has_tilt_support():
+                self.tilt_calc.stop()
+            await self.handle_command(SERVICE_STOP_COVER)
+
+        
+        self.last_trigger_time = current_time
+
 
 
     # This function is called by Home Assistant to restore the state of the cover
