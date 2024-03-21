@@ -476,6 +476,7 @@ class BlindsCover(CoverEntity, RestoreEntity):
                 # Stop the travel calculator
                 self.travel_calc.stop()
 
+
         # Check if the cover is not traveling and the tilt (if supported) is not traveling
         if (
             not self.travel_calc.is_traveling()
