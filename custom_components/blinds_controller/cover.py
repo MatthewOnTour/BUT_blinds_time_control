@@ -83,6 +83,9 @@ class BlindsCover(CoverEntity, RestoreEntity):
                 self.entry.data["tilt_closed"],
                 self.entry.data["tilt_open"],
             )
+        else:
+            self.tilt_calc = None  # Initialize tilt_calc to None if tilt support is not available
+
 
         self._unsubscribe_auto_updater = None
 
@@ -146,7 +149,11 @@ class BlindsCover(CoverEntity, RestoreEntity):
     # Return the current tilt of the cover
     @property
     def current_cover_tilt_position(self) -> int | None:
-        return self.tilt_calc.current_position()
+        if self.has_tilt_support():
+            return self.tilt_calc.current_position()
+        else:
+            return None
+
 
     # This properties (is_closed, is_opening and is_closing) are needed by the Home Assistant UI 
     # to display the state of the cover correctly
@@ -239,13 +246,15 @@ class BlindsCover(CoverEntity, RestoreEntity):
         self.handle_stop()
         await self.handle_command(SERVICE_STOP_COVER)
 
+
     # This function handles the stop command
     def handle_stop(self):
         if self.travel_calc.is_traveling():
             self.travel_calc.stop()
             self.stop_auto_updater()
 
-        if self.tilt_calc.is_traveling():
+        # Add a check to ensure that tilt_calc is not None before calling is_traveling()
+        if self.tilt_calc is not None and self.tilt_calc.is_traveling():
             self.tilt_calc.stop()
             self.stop_auto_updater()
 
@@ -358,7 +367,12 @@ class BlindsCover(CoverEntity, RestoreEntity):
     # based on the user input in the configuration flow or option flow
     # Returns True if the cover supports tilt, False otherwise  
     def has_tilt_support(self):
-        return self.entry.data["tilt_open"] != 0 and self.entry.data["tilt_closed"] != 0
+        return (
+            self.entry.data.get("tilt_open") is not None
+            and self.entry.data.get("tilt_closed") is not None
+            and self.entry.data["tilt_open"] != 0
+            and self.entry.data["tilt_closed"] != 0
+        )
 
     # This function is called when the state of the up or down switch changes
     async def handle_command(self, command, *args):
