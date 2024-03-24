@@ -29,9 +29,6 @@ from homeassistant.helpers.event import async_track_time_interval
 import logging
 from datetime import timedelta
 import asyncio
-import time
-
-DEBOUNCE_DELAY = 0.03
 
 # Import the TravelCalculator and TravelStatus classes from the calculator module
 # Currently using the:
@@ -44,7 +41,7 @@ from .const import DOMAIN
 
 # Logger for debuggind purposes
 _LOGGER = logging.getLogger(__name__)
-
+previous_cover_state = None
 # The service names for setting the known position and tilt position
 # Keep same as in services.yaml
 SERVICE_SET_KNOWN_POSITION = "set_known_position"
@@ -65,18 +62,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 # This function is called by Home Assistant to setup the component
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
-    # Create a new cover entity for each configuration entry
-    async_add_entities([BlindsCover(hass, entry)])
+    name = entry.title 
+    device_id = entry.entry_id 
+    async_add_entities([BlindsCover(hass, entry, name, device_id)])
 
 # This class represents a cover entity in Home Assistant
 class BlindsCover(CoverEntity, RestoreEntity):
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, name, device_id):
         self.hass = hass    # The Home Assistant instance
         self.entry = entry  # The configuration entry
         self._state = None  # Initialize _state attribute
         self._available = True  # Initialize _available attribute
         # Listen for state changes of the up and down switches
-        self.hass.bus.async_listen('state_changed', self.handle_state_change)
+        
 
         self.travel_calc = TravelCalculator(
             self.entry.data["time_down"],
@@ -90,13 +88,21 @@ class BlindsCover(CoverEntity, RestoreEntity):
         else:
             self.tilt_calc = None  # Initialize tilt_calc to None if tilt support is not available
 
+        self._unique_id = device_id
+        if name:
+            self._name = name
+        else:
+            self._name = device_id
+
 
         self._unsubscribe_auto_updater = None
 
-        self.last_trigger_time = 0
-
         # Listen for state changes of the up and down switches
-        self.hass.bus.async_listen('state_changed', self.handle_state_change)
+        # Call handle_state_change and pass the required keyword arguments
+
+
+
+            
 
     # The unique ID of the entity is the ID of the configuration entry
     @property
@@ -107,7 +113,7 @@ class BlindsCover(CoverEntity, RestoreEntity):
     # Return the name of the cover
     @property
     def name(self):
-        return self.entry.data["ent_name"]
+        return self._name
     
     # Return the device class of the cover
     @property
@@ -434,76 +440,6 @@ class BlindsCover(CoverEntity, RestoreEntity):
                 {"entity_id": self.entry.data["entity_up"]},
                 False,
             )
-
-
-    async def handle_state_change(self, event):
-        # Calculate the elapsed time since the last trigger event
-        current_time = time.time()
-        elapsed_time = current_time - self.last_trigger_time
-
-        # Check if the elapsed time is greater than the debounce delay
-        if elapsed_time < DEBOUNCE_DELAY:
-            # If the elapsed time is less than the debounce delay, ignore the trigger event
-            return
-
-        # Update the last trigger time
-        self.last_trigger_time = current_time
-
-        # Check if both entities are being turned on at the same time
-        if (
-            event.data["new_state"].state == "on"
-            and event.data["entity_id"]
-            in [self.entry.data["entity_up"], self.entry.data["entity_down"]]
-        ):
-            # Get the ID of the other entity
-            other_entity_id = (
-                self.entry.data["entity_down"]
-                if event.data["entity_id"] == self.entry.data["entity_up"]
-                else self.entry.data["entity_up"]
-            )
-
-            # Check if the other entity is already on
-            other_entity_state = self.hass.states.get(other_entity_id)
-            if other_entity_state is not None and other_entity_state.state == "on":
-                # If the other entity is on, turn it off
-                await self.hass.services.async_call(
-                    "homeassistant",
-                    "turn_off",
-                    {"entity_id": other_entity_id},
-                    blocking=True,
-                )
-
-                # Stop the travel calculator
-                self.travel_calc.stop()
-
-
-        # Check if the cover is not traveling and the tilt (if supported) is not traveling
-        if (
-            not self.travel_calc.is_traveling()
-            and (not self.has_tilt_support() or not self.tilt_calc.is_traveling())
-        ):
-            # Check if the entity triggering the event is the up or down entity
-            if event.data["entity_id"] == self.entry.data["entity_up"]:
-                # If the up entity is triggered, open the cover if it's not already open
-                _LOGGER.debug("TRAVELING UP")
-                if event.data["new_state"].state == "on":
-                    await self.async_open_cover()
-            elif event.data["entity_id"] == self.entry.data["entity_down"]:
-                # If the down entity is triggered, close the cover if it's not already closed
-                _LOGGER.debug("TRAVELING DOWN")
-                if event.data["new_state"].state == "on":
-                    await self.async_close_cover()
-
-        # Handle the 'off' event
-        if event.data["new_state"].state == "off":
-            _LOGGER.debug("STOPPING")
-            # Stop both travel calculators
-            self.travel_calc.stop()
-            if self.has_tilt_support():
-                self.tilt_calc.stop()
-            # Stop the cover
-            await self.handle_command(SERVICE_STOP_COVER)
-
 
 
     # This function is called by Home Assistant to restore the state of the cover
