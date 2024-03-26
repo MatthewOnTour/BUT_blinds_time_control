@@ -39,11 +39,6 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SEND_STOP_AT_ENDS = 'send_stop_at_ends'
-
-#  Interlocked relays
-DEFAULT_SEND_STOP_AT_ENDS = True   # OPTIONAL - can be set to False if you don't want the switch to switch off when it reaches the end
-
 SERVICE_SET_KNOWN_POSITION = "set_known_position"
 SERVICE_SET_KNOWN_TILT_POSITION = "set_known_tilt_position"
 
@@ -64,13 +59,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     name = entry.title 
     device_id = entry.entry_id 
-    send_stop_at_ends = entry.data.get(CONF_SEND_STOP_AT_ENDS, DEFAULT_SEND_STOP_AT_ENDS)  # Get send_stop_at_ends or use default value
-    async_add_entities([BlindsCover(hass, entry, name, device_id, send_stop_at_ends)])
+    async_add_entities([BlindsCover(hass, entry, name, device_id)])
 
 
 # This class represents a cover entity in Home Assistant
 class BlindsCover(CoverEntity, RestoreEntity):
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, name, device_id, send_stop_at_ends):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, name, device_id):
         self.hass = hass    # The Home Assistant instance
         self.entry = entry  # The configuration entry
         self._state = None  # Initialize _state attribute
@@ -83,7 +77,9 @@ class BlindsCover(CoverEntity, RestoreEntity):
         self._up_switch_entity_id = entry.data["entity_up"]
         self._down_switch_entity_id = entry.data["entity_down"]
         
-        self._send_stop_at_ends = send_stop_at_ends
+        # OPTIONAL - can be set to False if you don't want the switch to switch off when it reaches the end
+        # DEFAULT is set to True (swtitches off the switch when it reaches the end)
+        self._send_stop_at_ends = True
 
         self._target_position = 0
         self._target_tilt_position = 0
@@ -391,6 +387,7 @@ class BlindsCover(CoverEntity, RestoreEntity):
                 self.start_auto_updater()
             else:
                 if not self.tilt_calc.is_traveling():
+                    self.update_tilt_before_travel(SERVICE_OPEN_COVER)
                     if self._target_position != 100 and self._target_position != 0:
                         self.travel_calc.start_travel(self._target_position)
                     else:
@@ -407,6 +404,7 @@ class BlindsCover(CoverEntity, RestoreEntity):
                 self.start_auto_updater()
             else:
                 if not self.tilt_calc.is_traveling():
+                    self.update_tilt_before_travel(SERVICE_CLOSE_COVER)
                     if self._target_position != 100 and self._target_position != 0:
                         self.travel_calc.start_travel(self._target_position)
                     else:
