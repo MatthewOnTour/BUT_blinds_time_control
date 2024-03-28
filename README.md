@@ -5,7 +5,10 @@ Upgrade your Home Assistant with this custom blinds control integration. It's de
 ## How to Install
 
 Getting started is a piece of cake!
-You can add this integration through HACS (Home Assistant Community Store) or simply copy all files from the custom_components/blinds_controller directory into your Home Assistant's /custom_components/blinds_controller/ directory. Then, just give Home Assistant a quick restart, and you're good to go.
+
+You can add this integration through HACS (Home Assistant Community Store) or simply copy all files from the custom_components/blinds_controller directory into your Home Assistant's /custom_components/blinds_controller/ directory. 
+
+Then, just give Home Assistant a quick restart, and you're good to go.
 
 ## Setting Things Up
 
