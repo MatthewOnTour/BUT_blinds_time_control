@@ -22,6 +22,17 @@ You can also tweak existing configurations to suit your preferences.
 
 Got a snag? No worries! Visit [GitHub issues page](https://github.com/MatthewOnTour/BUT_blinds_time_control/issues) to report any issues or seek assistance.
 
+## Acknowledgment
+
+Work was based on and inspired by this insightful [community post](https://community.home-assistant.io/t/custom-component-cover-time-based/187654)
+
+## Support
+
+You can support my work here: 
+
+<a href="https://www.buymeacoffee.com/MatthewOnTour"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" width="200" /></a>
+
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](https://github.com/MatthewOnTour/BUT_blinds_time_control?tab=MIT-1-ov-file) file for details.
