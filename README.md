@@ -16,7 +16,7 @@ Head over to Settings -> Devices and Services -> Click on Add Integration (selec
 
 Name your blinds, select the controlling entities, specify roll-up and roll-down times in seconds, and if you need it, set tilt times (or leave them at 0 if you don't want tilting support).
 
-You can also tweak existing configurations to suit your preferences.
+You can also tweak existing configurations to suit your preferences (just reload the edited entries).
 
 ## Need Help?
 
