@@ -12,7 +12,21 @@
                     "time_up": "Time for the up movement in seconds",
                     "time_down": "Time for the down movement in seconds",
                     "tilt_open": "Time for tilt angle for the open state from closed state in seconds",
-                    "tilt_closed": "Time for tilt angle for the closed state from open state in seconds"
+                    "tilt_closed": "Time for tilt angle for the closed state from open state in seconds",
+                    "timed_control_down": "Enable timed control below",
+                    "time_to_roll_down": "Set the time if you wish to roll the blinds down at a specific time (HH:MM)",
+                    "timed_control_up": "Enable timed control below",
+                    "time_to_roll_up": "Set the time if you wish to roll the blinds up at a specific time (HH:MM)",
+                    "delay_control": "Enable the delay control below",
+                    "delay_sunrise": "Delay in minutes after sunrise to open the blinds.",
+                    "delay_sunset": "Delay in minutes after sunset to close the blinds",
+                    "night_lights": "Enable night lights control below",
+                    "entity_night_lights": "When it's nighttime and the entity is turned on, the blinds will roll down.",
+                    "tilting_day": "Tilt will remain open during the day",
+                    "protect_the_blinds": "Protect the blinds from the strong wind and rain",
+                    "wind_speed": "Wind speed in km/h (if current above blinds will close)",
+                    "wmo_code": "WMO code for the location (if current above blinds will close)",
+                    "send_stop_at_end": "Send stop command at the end (interlock relay)"
                 }
             }
         }
@@ -29,7 +43,21 @@
                     "time_up": "Time for the up movement in seconds",
                     "time_down": "Time for the down movement in seconds",
                     "tilt_open": "Time for tilt angle for the open state from closed state in seconds",
-                    "tilt_closed": "Time for tilt angle for the closed state from open state in seconds"
+                    "tilt_closed": "Time for tilt angle for the closed state from open state in seconds",
+                    "timed_control_down": "Enable timed control below",
+                    "time_to_roll_down": "Set the time if you wish to roll the blinds down at a specific time (HH:MM)",
+                    "timed_control_up": "Enable timed control below",
+                    "time_to_roll_up": "Set the time if you wish to roll the blinds up at a specific time (HH:MM)",
+                    "delay_control": "Enable the delay control below",
+                    "delay_sunrise": "Delay in minutes after sunrise to open the blinds.",
+                    "delay_sunset": "Delay in minutes after sunset to close the blinds",
+                    "night_lights": "Enable night lights control below",
+                    "entity_night_lights": "When it's nighttime and the entity is turned on, the blinds will roll down.",
+                    "tilting_day": "Tilt will remain open during the day",
+                    "protect_the_blinds": "Protect the blinds from the strong wind and rain",
+                    "wind_speed": "Wind speed in km/h (if current above blinds will close)",
+                    "wmo_code": "WMO code for the location (if current above blinds will close)",
+                    "send_stop_at_end": "Send stop command at the end (interlock relay)"
                 }
             }
         }

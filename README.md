@@ -18,9 +18,14 @@ Name your blinds, select the controlling entities, specify roll-up and roll-down
 
 You can also tweak existing configurations to suit your preferences (just reload the edited entries).
 
+## Automations
+During the setup process, you have the option to configure various automated tasks. These features are currently in an EXPERIMENTAL phase and are being developed as part of my bachelor's thesis, so please refrain from extensive experimentation with these automations.
+
+Examples include scheduling specific times for actions such as raising or lowering blinds, automating the opening and closing of blinds based on sunrise and sunset times, or automatically lowering blinds when a particular entity is activated during the night. Additionally, there are weather protection measures available, such as responding to strong winds using the [WMO Code](https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM) and utilizing the [Open Meteo API](https://open-meteo.com/). For those utilizing interlock relays, there's the possibility to trigger a stop command at the end of a travel.
+
 ## Need Help?
 
-Got a snag? No worries! Visit [GitHub issues page](https://github.com/MatthewOnTour/BUT_blinds_time_control/issues) to report any issues or seek assistance.
+Got a snag? Visit [GitHub issues page](https://github.com/MatthewOnTour/BUT_blinds_time_control/issues) to report any issues or seek assistance or head over to documentation [GitHub documentation](https://github.com/MatthewOnTour/BUT_blinds_time_control/blob/main/README.md).
 
 ## Acknowledgment
 
