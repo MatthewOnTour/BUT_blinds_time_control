@@ -1,12 +1,12 @@
 {
   "domain": "blinds_controller",
   "name": "Blinds control",
-  "codeowners": ["@MatthewOnTour"],
+  "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/MatthewOnTour/BUT_blinds_time_control/blob/main/README.md",
   "issue_tracker": "https://github.com/MatthewOnTour/BUT_blinds_time_control/issues",
+  "iot_class": "assumed_state",
+  "codeowners": ["@MatthewOnTour"],
   "requirements": [],
-  "version": "1.0.0",
-  "config_flow": true,
-  "iot_class": "assumed_state"
+  "version": "1.0.0"
 }
