@@ -65,27 +65,11 @@
     "services": {
         "set_known_position": {
             "name": "Set Known Position",
-            "description": "Set the known position of the blinds",
-            "entity_id": {
-                "name": "Entity ID",
-                "description": "The ID of the blinds entity"
-            },
-            "position": {
-                "name": "Position",
-                "description": "The position to set for the blinds"
-            }
+            "description": "Set the known position of the blinds"
         },
         "set_known_tilt_position": {
             "name": "Set Known Tilt Position",
-            "description": "Set the known tilt position of the blinds",
-            "entity_id": {
-                "name": "Entity ID",
-                "description": "The ID of the blinds entity"
-            },
-            "position": {
-                "name": "Tilt Position",
-                "description": "The tilt position to set for the blinds"
-            }
+            "description": "Set the known tilt position of the blinds"
         }
     }
 }

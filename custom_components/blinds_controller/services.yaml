@@ -1,4 +1,5 @@
 set_known_position:
+  description: Set the known position of the blinds
   fields:
     entity_id:
       description: The ID of the entity
@@ -6,11 +7,13 @@ set_known_position:
     position:
       description: The position to set
       example: 50
+
 set_known_tilt_position:
+  description: Set the known tilt position of the blinds
   fields:
     entity_id:
       description: The ID of the entity
       example: 'cover.living_room_blinds'
     position:
       description: The tilt position to set
-      example: 30
+      example: 50
