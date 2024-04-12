@@ -1,5 +1,5 @@
 {
-  "domain": "blinds_time_control",
+  "domain": "blinds_controller",
   "name": "Blinds control",
   "codeowners": ["@MatthewOnTour"],
   "dependencies": [],

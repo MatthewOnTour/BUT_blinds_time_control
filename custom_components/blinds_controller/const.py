@@ -1,3 +1,3 @@
 # const.py
 
-DOMAIN = "blinds_time_control"
+DOMAIN = "blinds_controller"
