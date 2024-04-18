@@ -8,7 +8,7 @@ set_known_position:
     position:
       name: Entity ID
       description: The position to set
-      example: 50
+      example: 100
 
 set_known_tilt_position:
   description: Set the known tilt position of the blinds
@@ -20,4 +20,4 @@ set_known_tilt_position:
     position:
       name: Entity ID
       description: The tilt position to set
-      example: 50
+      example: 100

@@ -26,7 +26,12 @@
                     "protect_the_blinds": "Protect the blinds from the strong wind and rain",
                     "wind_speed": "Wind speed in km/h (if current above blinds will close)",
                     "wmo_code": "WMO code for the location (if current above blinds will close)",
-                    "send_stop_at_end": "Send stop command at the end (interlock relay)"
+                    "send_stop_at_end": "Send stop command at the end (interlock relay)",
+                    "netamo_enable": "If netamo configured enable this to protect the blinds from the strong wind",
+                    "netamo_speed_entity": "Wind speed entity from netamo",
+                    "netamo_speed": "Wind speed in km/h (if current above blinds will close)",
+                    "netamo_gust_entity": "Wind gust entity from netamo",
+                    "netamo_gust": "Wind gust in km/h (if current above blinds will close)"
                 }
             }
         }
@@ -57,7 +62,12 @@
                     "protect_the_blinds": "Protect the blinds from the strong wind and rain",
                     "wind_speed": "Wind speed in km/h (if current above blinds will close)",
                     "wmo_code": "WMO code for the location (if current above blinds will close)",
-                    "send_stop_at_end": "Send stop command at the end (interlock relay)"
+                    "send_stop_at_end": "Send stop command at the end (interlock relay)",
+                    "netamo_enable": "If netamo configured enable this to protect the blinds from the strong wind",
+                    "netamo_speed_entity": "Wind speed entity from netamo",
+                    "netamo_speed": "Wind speed in km/h (if current above blinds will close)",
+                    "netamo_gust_entity": "Wind gust entity from netamo",
+                    "netamo_gust": "Wind gust in km/h (if current above blinds will close)"
                 }
             }
         }

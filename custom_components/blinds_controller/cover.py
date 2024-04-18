@@ -94,6 +94,13 @@ class BlindsCover(CoverEntity, RestoreEntity):
         self._protect_the_blinds = entry.data["protect_the_blinds"]
         self._set_wind_speed = entry.data["wind_speed"]
         self._wmo_code = entry.data["wmo_code"]
+        self._netamo_enable = entry.data["netamo_enable"]
+        self._netamo_speed_entity = entry.data["netamo_speed_entity"]
+        self._wind_speed = self.hass.states.get(self._netamo_speed_entity).state
+        self._netamo_speed = entry.data["netamo_speed"]
+        self._netamo_gust_entity = entry.data["netamo_gust_entity"]
+        self._gust_speed = self.hass.states.get(self._netamo_gust_entity).state
+        self._netamo_gust = entry.data["netamo_gust"]
         self._send_stop_at_end = entry.data["send_stop_at_end"]
 
         self._sun_next_sunrise = self.hass.states.get("sensor.sun_next_dawn").state
@@ -364,7 +371,7 @@ class BlindsCover(CoverEntity, RestoreEntity):
 
     async def add_ons(self, now):
         # Adjust the current time by adding one hour
-        corrected_time = now + timedelta(hours=1) # Edit the time if needed to correct the time zone
+        corrected_time = now + timedelta(hours=0) # Edit the time if needed to correct the time zone
 
         # Format the corrected time to display only HH:MM
         formatted_time = corrected_time.strftime("%H:%M")
@@ -437,6 +444,20 @@ class BlindsCover(CoverEntity, RestoreEntity):
 
                     if not (formatted_time > formatted_time_sunset or formatted_time < formatted_time_sunrise) and self.tilt_calc.current_position() < 100:
                         await self.async_open_cover_tilt()
+
+        if self._netamo_enable and not self.travel_calc.is_traveling():
+            _LOGGER.info("wind: %s", self._wind_speed)
+            _LOGGER.info("wind: %s", self._netamo_speed)
+            _LOGGER.info("gust: %s", self._gust_speed)
+            _LOGGER.info("gust: %s", self._netamo_gust)
+            self._wind_speed = float(self._wind_speed)
+            self._netamo_speed = float(self._netamo_speed)
+            self._gust_speed = float(self._gust_speed)
+            self._netamo_gust = float(self._netamo_gust)
+            if self._wind_speed > self._netamo_speed and self.travel_calc.current_position() < 100:
+                await self.async_open_cover()
+            elif self._gust_speed > self._netamo_gust and self.travel_calc.current_position() < 100:
+                await self.async_open_cover()
 
         _LOGGER.info("self._protect_the_blinds: %s", self._protect_the_blinds)
         if self._protect_the_blinds and not self.travel_calc.is_traveling():
