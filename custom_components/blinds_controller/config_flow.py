@@ -52,9 +52,9 @@ class BlindsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional("wmo_code", default=80): vol.All(vol.Coerce(int)),
 
                     vol.Required("netamo_enable", default=False): bool,
-                    vol.Required("netamo_speed_entity", default=None): vol.In(self._get_entity_ids()),
+                    vol.Optional("netamo_speed_entity", default=None): vol.Any(None, vol.In(self._get_entity_ids())),
                     vol.Optional("netamo_speed", default=30): vol.All(vol.Coerce(float)),
-                    vol.Required("netamo_gust_entity", default=None): vol.In(self._get_entity_ids()),
+                    vol.Optional("netamo_gust_entity", default=None): vol.Any(None, vol.In(self._get_entity_ids())),
                     vol.Optional("netamo_gust", default=40): vol.All(vol.Coerce(float)),
 
 
@@ -109,9 +109,9 @@ class BlindsOptionsFlow(config_entries.OptionsFlow):
                     vol.Optional("wind_speed", default=self.config_entry.data.get("wind_speed")): vol.All(vol.Coerce(float)),
                     vol.Optional("wmo_code", default=self.config_entry.data.get("wmo_code")): vol.All(vol.Coerce(int)),
                     vol.Required("netamo_enable", default=self.config_entry.data.get("netamo_enable")): bool,
-                    vol.Required("netamo_speed_entity", default=self.config_entry.data.get("netamo_speed_entity")): vol.In(self._get_entity_ids()),
+                    vol.Optional("netamo_speed_entity", default=self.config_entry.data.get("netamo_speed_entity")): vol.Any(None, vol.In(self._get_entity_ids())),
                     vol.Optional("netamo_speed", default=self.config_entry.data.get("netamo_speed")): vol.All(vol.Coerce(float)),
-                    vol.Required("netamo_gust_entity", default=self.config_entry.data.get("netamo_gust_entity")): vol.In(self._get_entity_ids()),
+                    vol.Optional("netamo_gust_entity", default=self.config_entry.data.get("netamo_gust_entity")): vol.Any(None, vol.In(self._get_entity_ids())),
                     vol.Optional("netamo_gust", default=self.config_entry.data.get("netamo_gust")): vol.All(vol.Coerce(float)),
                     vol.Required("send_stop_at_end", default=self.config_entry.data.get("send_stop_at_end")): bool,
                 }

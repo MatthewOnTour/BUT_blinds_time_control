@@ -96,10 +96,12 @@ class BlindsCover(CoverEntity, RestoreEntity):
         self._wmo_code = entry.data["wmo_code"]
         self._netamo_enable = entry.data["netamo_enable"]
         self._netamo_speed_entity = entry.data["netamo_speed_entity"]
-        self._wind_speed = self.hass.states.get(self._netamo_speed_entity).state
+        if self._netamo_speed_entity is not None:
+            self._wind_speed = self.hass.states.get(self._netamo_speed_entity).state
         self._netamo_speed = entry.data["netamo_speed"]
         self._netamo_gust_entity = entry.data["netamo_gust_entity"]
-        self._gust_speed = self.hass.states.get(self._netamo_gust_entity).state
+        if self._netamo_gust_entity is not None:
+            self._gust_speed = self.hass.states.get(self._netamo_gust_entity).state
         self._netamo_gust = entry.data["netamo_gust"]
         self._send_stop_at_end = entry.data["send_stop_at_end"]
 
