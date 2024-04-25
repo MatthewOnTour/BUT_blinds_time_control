@@ -24,11 +24,14 @@ You can also tweak existing configurations to suit your preferences (just reload
 ## Automations
 During the setup process, you have the option to configure various automated tasks. These features are currently in an <span style="color:red">EXPERIMENTAL</span> phase and are being developed as part of my bachelor's thesis, so please refrain from extensive experimentation with this automation.
 
-Examples include scheduling specific times for actions such as raising or lowering blinds, automating the opening and closing of blinds based on sunrise and sunset times, or automatically lowering blinds when a particular entity is activated during the night. Additionally, there are weather protection measures available, such as responding to strong winds using the [WMO Code](https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM) and utilizing the [Open Meteo API](https://open-meteo.com/) or perhaps you would like to use Netatmo, that also works.  For those utilizing interlock relays, there's the possibility of triggering a stop command at the end of travel.
+Examples include scheduling specific times for actions such as raising or lowering blinds, automating the opening and closing of blinds based on sunrise and sunset times, or automatically lowering blinds when a particular entity is activated during the night. Additionally, there are weather protection measures available, such as responding to strong winds using the [WMO Code](https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM) and utilizing the [Open Meteo API](https://open-meteo.com/) or perhaps you would like to use [Netatmo](https://open-meteo.com/), that also works.  For those utilizing interlock relays, there's the possibility of triggering a stop command at the end of travel.
 
 ## Need Help?
 
-Got a snag? Visit [GitHub issues page](https://github.com/MatthewOnTour/BUT_blinds_time_control/issues) to report any issues or seek assistance or head over to documentation [GitHub documentation](https://github.com/MatthewOnTour/BUT_blinds_time_control/blob/main/README.md).
+Got a snag? Visit [GitHub issues page](https://github.com/MatthewOnTour/BUT_blinds_time_control/issues) to report any issues or seek assistance or head over to documentation [GitHub documentation](https://github.com/MatthewOnTour/BUT_blinds_time_control/blob/main/README.md). 
+
+Alternatively, [visit this page](https://community.home-assistant.io/t/home-assistant-blinds-control-custom-integration/718612) to check if you can't find a solution to your problem there.
+
 
 ## Acknowledgment
 
