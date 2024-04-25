@@ -56,6 +56,8 @@ class BlindsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional("netamo_speed", default=30): vol.All(vol.Coerce(float)),
                     vol.Optional("netamo_gust_entity", default=None): vol.Any(None, vol.In(self._get_entity_ids())),
                     vol.Optional("netamo_gust", default=40): vol.All(vol.Coerce(float)),
+                    vol.Optional("netamo_rain_entity", default=None): vol.Any(None, vol.In(self._get_entity_ids())),
+                    vol.Optional("netamo_rain", default=40): vol.All(vol.Coerce(float)),
 
 
                     vol.Required("send_stop_at_end", default=True): bool
@@ -95,24 +97,33 @@ class BlindsOptionsFlow(config_entries.OptionsFlow):
                     vol.Required("time_down", default=self.config_entry.data.get("time_down", 0.0)): vol.All(vol.Coerce(float), vol.Range(min=0)),
                     vol.Required("tilt_open", default=self.config_entry.data.get("tilt_open", 0.0)): vol.All(vol.Coerce(float), vol.Range(min=0)),
                     vol.Required("tilt_closed", default=self.config_entry.data.get("tilt_closed", 0.0)): vol.All(vol.Coerce(float), vol.Range(min=0)),
+                    
                     vol.Required("timed_control_down", default=self.config_entry.data.get("timed_control_down")): bool,
                     vol.Optional("time_to_roll_down", default=self.config_entry.data.get("time_to_roll_down", "")) : vol.All(vol.Coerce(str)),
                     vol.Required("timed_control_up", default=self.config_entry.data.get("timed_control_up")): bool,
                     vol.Optional("time_to_roll_up", default=self.config_entry.data.get("time_to_roll_up", "")) : vol.All(vol.Coerce(str)),
+
                     vol.Required("delay_control", default=self.config_entry.data.get("delay_control")): bool, 
                     vol.Optional("delay_sunrise", default=self.config_entry.data.get("delay_sunrise", 0)): vol.All(vol.Coerce(int)),
                     vol.Optional("delay_sunset", default=self.config_entry.data.get("delay_sunset", 0)): vol.All(vol.Coerce(int)),
+
                     vol.Required("night_lights", default=self.config_entry.data.get("night_lights")): bool, 
                     vol.Optional("entity_night_lights", default=self.config_entry.data.get("entity_night_lights")) : vol.Any(None, vol.In(self._get_entity_ids())),
+
                     vol.Required("tilting_day", default=self.config_entry.data.get("tilting_day")): bool,
+
                     vol.Required("protect_the_blinds", default=self.config_entry.data.get("protect_the_blinds")): bool,
                     vol.Optional("wind_speed", default=self.config_entry.data.get("wind_speed")): vol.All(vol.Coerce(float)),
                     vol.Optional("wmo_code", default=self.config_entry.data.get("wmo_code")): vol.All(vol.Coerce(int)),
+
                     vol.Required("netamo_enable", default=self.config_entry.data.get("netamo_enable")): bool,
                     vol.Optional("netamo_speed_entity", default=self.config_entry.data.get("netamo_speed_entity")): vol.Any(None, vol.In(self._get_entity_ids())),
                     vol.Optional("netamo_speed", default=self.config_entry.data.get("netamo_speed")): vol.All(vol.Coerce(float)),
                     vol.Optional("netamo_gust_entity", default=self.config_entry.data.get("netamo_gust_entity")): vol.Any(None, vol.In(self._get_entity_ids())),
                     vol.Optional("netamo_gust", default=self.config_entry.data.get("netamo_gust")): vol.All(vol.Coerce(float)),
+                    vol.Optional("netamo_rain_entity", default=self.config_entry.data.get("netamo_rain_entity")): vol.Any(None, vol.In(self._get_entity_ids())),
+                    vol.Optional("netamo_rain", default=self.config_entry.data.get("netamo_rain")): vol.All(vol.Coerce(float)),
+
                     vol.Required("send_stop_at_end", default=self.config_entry.data.get("send_stop_at_end")): bool,
                 }
             ),

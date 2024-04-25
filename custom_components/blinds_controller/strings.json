@@ -24,14 +24,16 @@
                     "entity_night_lights": "When it's nighttime and the entity is turned on, the blinds will roll down.",
                     "tilting_day": "Tilt will remain open during the day",
                     "protect_the_blinds": "Protect the blinds from the strong wind and rain",
-                    "wind_speed": "Wind speed in km/h (if current above blinds will close)",
-                    "wmo_code": "WMO code for the location (if current above blinds will close)",
+                    "wind_speed": "Wind speed in km/h (if current above blinds will open)",
+                    "wmo_code": "WMO code for the location (if current above blinds will open)",
                     "send_stop_at_end": "Send stop command at the end (interlock relay)",
                     "netamo_enable": "If netamo configured enable this to protect the blinds from the strong wind",
                     "netamo_speed_entity": "Wind speed entity from netamo",
-                    "netamo_speed": "Wind speed in km/h (if current above blinds will close)",
+                    "netamo_speed": "Wind speed in km/h (if current above blinds will open)",
                     "netamo_gust_entity": "Wind gust entity from netamo",
-                    "netamo_gust": "Wind gust in km/h (if current above blinds will close)"
+                    "netamo_gust": "Wind gust in km/h (if current above blinds will open)",
+                    "netamo_rain_entity": "Rain entity from netamo",
+                    "netamo_rain": "Rain in mm (if current above blinds will open)"
                 }
             }
         }
@@ -60,14 +62,16 @@
                     "entity_night_lights": "When it's nighttime and the entity is turned on, the blinds will roll down.",
                     "tilting_day": "Tilt will remain open during the day",
                     "protect_the_blinds": "Protect the blinds from the strong wind and rain",
-                    "wind_speed": "Wind speed in km/h (if current above blinds will close)",
-                    "wmo_code": "WMO code for the location (if current above blinds will close)",
+                    "wind_speed": "Wind speed in km/h (if current above blinds will open)",
+                    "wmo_code": "WMO code for the location (if current above blinds will open)",
                     "send_stop_at_end": "Send stop command at the end (interlock relay)",
                     "netamo_enable": "If netamo configured enable this to protect the blinds from the strong wind",
                     "netamo_speed_entity": "Wind speed entity from netamo",
-                    "netamo_speed": "Wind speed in km/h (if current above blinds will close)",
+                    "netamo_speed": "Wind speed in km/h (if current above blinds will open)",
                     "netamo_gust_entity": "Wind gust entity from netamo",
-                    "netamo_gust": "Wind gust in km/h (if current above blinds will close)"
+                    "netamo_gust": "Wind gust in km/h (if current above blinds will open)",
+                    "netamo_rain_entity": "Wind rain entity from netamo",
+                    "netamo_rain": "Rain in mm (if current above blinds will open)"
                 }
             }
         }

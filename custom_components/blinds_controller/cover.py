@@ -104,6 +104,10 @@ class BlindsCover(CoverEntity, RestoreEntity):
             self._gust_speed = self.hass.states.get(self._netamo_gust_entity).state
         self._netamo_gust = entry.data["netamo_gust"]
         self._send_stop_at_end = entry.data["send_stop_at_end"]
+        self._netamo_rain_entity = entry.data["netamo_rain_entity"]
+        if self._netamo_rain_entity is not None:
+            self._netamo_cur_rain = self.hass.states.get(self._netamo_rain_entity).state
+        self._netamo_rain = entry.data["netamo_rain"]
 
         self._sun_next_sunrise = self.hass.states.get("sensor.sun_next_dawn").state
         self._sun_next_sunset = self.hass.states.get("sensor.sun_next_dusk").state
@@ -456,9 +460,13 @@ class BlindsCover(CoverEntity, RestoreEntity):
             self._netamo_speed = float(self._netamo_speed)
             self._gust_speed = float(self._gust_speed)
             self._netamo_gust = float(self._netamo_gust)
+            self._netamo_cur_rain = float(self._netamo_cur_rain)
+            self._netamo_rain = float(self._netamo_rain)
             if self._wind_speed > self._netamo_speed and self.travel_calc.current_position() < 100:
                 await self.async_open_cover()
             elif self._gust_speed > self._netamo_gust and self.travel_calc.current_position() < 100:
+                await self.async_open_cover()
+            elif self._netamo_cur_rain > self._netamo_rain and self.travel_calc.current_position() < 100:
                 await self.async_open_cover()
 
         _LOGGER.info("self._protect_the_blinds: %s", self._protect_the_blinds)
