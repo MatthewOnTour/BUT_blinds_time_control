@@ -8,7 +8,6 @@ from .const import DOMAIN
 
 class BlindsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @callback
     def _get_entity_ids(self):
