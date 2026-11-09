@@ -1,0 +1,88 @@
+{
+  "config": {
+    "title": "Blinds Controller Setup",
+    "step": {
+      "user": {
+        "title": "Blinds Configuration",
+        "description": "Configure time-based control for your blinds.",
+        "data": {
+          "ent_name": "Name (e.g., Living Room Blinds)",
+          "entity_up": "Switch entity to move UP",
+          "entity_down": "Switch entity to move DOWN",
+          "time_up": "Travel time UP (seconds)",
+          "time_down": "Travel time DOWN (seconds)",
+          "dead_time": "Dead time / Start delay (seconds)",
+          "stop_delay": "Stop delay / Coasting time (seconds)",
+          "sperrzeit": "Lockout time / pulse threshold (seconds)",
+          "overtravel_time": "End-stop overtravel buffer (seconds)",
+          "interlock_delay": "Interlock delay between directions (seconds)",
+          "tilt_open": "Tilt time to OPEN (seconds, 0 to disable)",
+          "tilt_closed": "Tilt time to CLOSE (seconds, 0 to disable)",
+          "send_stop_at_end": "Send STOP command when target position reached"
+        },
+        "data_description": {
+          "dead_time": "Delay before the motor relay actually engages (default 0.78s). Added to commanded movements so effective travel time is exact.",
+          "stop_delay": "Time the motor coasts after the relay turns off before coming to a stop (default 0.15s). Subtracted from relay run time.",
+          "sperrzeit": "Lockout threshold (default 0.2s). Commands <= this threshold are blocked by HA to prevent triggering unwanted full-travel pulses. Physical button presses <= this trigger full travel.",
+          "overtravel_time": "Extra run time on 0% and 100% to ensure physical limit switches are reached and eliminate drift.",
+          "interlock_delay": "Safety pause between switching from up to down (or down to up) to protect relays and motor."
+        }
+      }
+    },
+    "error": {
+      "no_switches": "No switch entities found. Please ensure switch entities exist before setting up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Blinds Controller Options",
+        "description": "Update the settings for this blinds cover.",
+        "data": {
+          "ent_name": "Name (e.g., Living Room Blinds)",
+          "entity_up": "Switch entity to move UP",
+          "entity_down": "Switch entity to move DOWN",
+          "time_up": "Travel time UP (seconds)",
+          "time_down": "Travel time DOWN (seconds)",
+          "dead_time": "Dead time / Start delay (seconds)",
+          "stop_delay": "Stop delay / Coasting time (seconds)",
+          "sperrzeit": "Lockout time / pulse threshold (seconds)",
+          "overtravel_time": "End-stop overtravel buffer (seconds)",
+          "interlock_delay": "Interlock delay between directions (seconds)",
+          "tilt_open": "Tilt time to OPEN (seconds, 0 to disable)",
+          "tilt_closed": "Tilt time to CLOSE (seconds, 0 to disable)",
+          "send_stop_at_end": "Send STOP command when target position reached"
+        },
+        "data_description": {
+          "dead_time": "Delay before the motor relay actually engages (default 0.78s). Added to commanded movements so effective travel time is exact.",
+          "stop_delay": "Time the motor coasts after the relay turns off before coming to a stop (default 0.15s). Subtracted from relay run time.",
+          "sperrzeit": "Lockout threshold (default 0.2s). Commands <= this threshold are blocked by HA to prevent triggering unwanted full-travel pulses. Physical button presses <= this trigger full travel.",
+          "overtravel_time": "Extra run time on 0% and 100% to ensure physical limit switches are reached and eliminate drift.",
+          "interlock_delay": "Safety pause between switching from up to down (or down to up) to protect relays and motor."
+        }
+      }
+    }
+  },
+  "services": {
+    "set_known_position": {
+      "name": "Set Known Position",
+      "description": "Manually set the current position of the blinds without moving them (useful for recalibration).",
+      "fields": {
+        "position": {
+          "name": "Position",
+          "description": "The position to set (0 = closed, 100 = open)."
+        }
+      }
+    },
+    "set_known_tilt_position": {
+      "name": "Set Known Tilt Position",
+      "description": "Manually set the current tilt position of the blinds without moving them.",
+      "fields": {
+        "position": {
+          "name": "Tilt Position",
+          "description": "The tilt position to set (0 = closed, 100 = open)."
+        }
+      }
+    }
+  }
+}

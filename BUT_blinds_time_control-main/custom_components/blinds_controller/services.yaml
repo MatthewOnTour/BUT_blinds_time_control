@@ -1,0 +1,37 @@
+set_known_position:
+  name: Set Known Position
+  description: Manually set the current position of the blinds without moving them. Useful for recalibration.
+  target:
+    entity:
+      domain: cover
+  fields:
+    position:
+      name: Position
+      description: The position to set (0 = closed, 100 = open).
+      required: true
+      example: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+
+set_known_tilt_position:
+  name: Set Known Tilt Position
+  description: Manually set the current tilt position of the blinds without moving them.
+  target:
+    entity:
+      domain: cover
+  fields:
+    position:
+      name: Tilt Position
+      description: The tilt position to set (0 = closed, 100 = open).
+      required: true
+      example: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"

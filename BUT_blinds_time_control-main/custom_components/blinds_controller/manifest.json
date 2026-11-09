@@ -1,0 +1,12 @@
+{
+  "domain": "blinds_controller",
+  "name": "Blinds control",
+  "codeowners": ["@YanBad"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/YanBad/BUT_blinds_time_control/blob/main/README.md",
+  "iot_class": "assumed_state",
+  "issue_tracker": "https://github.com/YanBad/BUT_blinds_time_control/issues",
+  "requirements": [],
+  "version": "1.2.0"
+}

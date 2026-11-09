@@ -1,0 +1,88 @@
+{
+  "config": {
+    "title": "Jalousiesteuerung Einrichtung",
+    "step": {
+      "user": {
+        "title": "Jalousie-Konfiguration",
+        "description": "Konfigurieren Sie die zeitbasierte Steuerung für Ihre Jalousie / Rollladen.",
+        "data": {
+          "ent_name": "Name (z. B. Wohnzimmer Jalousie)",
+          "entity_up": "Schalter / Relais für AUF",
+          "entity_down": "Schalter / Relais für AB",
+          "time_up": "Fahrzeit AUF in Sekunden",
+          "time_down": "Fahrzeit AB in Sekunden",
+          "dead_time": "Totzeit / Ansprechverzögerung in Sekunden",
+          "stop_delay": "Stopp-Verzögerung / Nachlaufzeit in Sekunden",
+          "sperrzeit": "Sperrzeit / Impulsschwelle in Sekunden",
+          "overtravel_time": "Endlagen-Nachlaufzeit in Sekunden (0% / 100%)",
+          "interlock_delay": "Verriegelungsverzögerung zwischen Richtungswechseln in Sekunden",
+          "tilt_open": "Lamellen-Wendezeit AUF in Sekunden (0 zum Deaktivieren)",
+          "tilt_closed": "Lamellen-Wendezeit ZU in Sekunden (0 zum Deaktivieren)",
+          "send_stop_at_end": "STOPP-Befehl nach Erreichen der Zielposition senden"
+        },
+        "data_description": {
+          "dead_time": "Verzögerung vom Klick/Einschalten bis der Motor tatsächlich anzieht (Standard 0.78s). Wird auf alle Fahrten aufaddiert, damit die effektive Bewegung exakt stimmt.",
+          "stop_delay": "Zeit, die der Motor nach dem Abschalten des Relais bis zum Stillstand nachläuft (Standard 0.15s). Wird von der Relais-Einschaltdauer subtrahiert.",
+          "sperrzeit": "Sperrzeit-Schwellenwert (Standard 0.2s). Kürzere Fahrbefehle werden von Home Assistant blockiert, um versehentliche Komplettfahrten zu verhindern. Physische Tastendrücke unter diesem Wert lösen eine Komplettfahrt aus.",
+          "overtravel_time": "Zusätzliche Motorlaufzeit beim vollständigen Öffnen (100%) oder Schließen (0%), damit der mechanische Endschalter sicher erreicht und die Position rekalibriert wird.",
+          "interlock_delay": "Sicherheitspause beim Richtungswechsel, um gleichzeitiges Bestromen beider Motorwicklungen und Relaisabbrand zu verhindern."
+        }
+      }
+    },
+    "error": {
+      "no_switches": "Keine Schalter-Entitäten (switch) gefunden. Bitte stellen Sie sicher, dass entsprechende Schalter existieren."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Jalousiesteuerung Optionen",
+        "description": "Einstellungen für diese Jalousie bearbeiten.",
+        "data": {
+          "ent_name": "Name (z. B. Wohnzimmer Jalousie)",
+          "entity_up": "Schalter / Relais für AUF",
+          "entity_down": "Schalter / Relais für AB",
+          "time_up": "Fahrzeit AUF in Sekunden",
+          "time_down": "Fahrzeit AB in Sekunden",
+          "dead_time": "Totzeit / Ansprechverzögerung in Sekunden",
+          "stop_delay": "Stopp-Verzögerung / Nachlaufzeit in Sekunden",
+          "sperrzeit": "Sperrzeit / Impulsschwelle in Sekunden",
+          "overtravel_time": "Endlagen-Nachlaufzeit in Sekunden (0% / 100%)",
+          "interlock_delay": "Verriegelungsverzögerung zwischen Richtungswechseln in Sekunden",
+          "tilt_open": "Lamellen-Wendezeit AUF in Sekunden (0 zum Deaktivieren)",
+          "tilt_closed": "Lamellen-Wendezeit ZU in Sekunden (0 zum Deaktivieren)",
+          "send_stop_at_end": "STOPP-Befehl nach Erreichen der Zielposition senden"
+        },
+        "data_description": {
+          "dead_time": "Verzögerung vom Klick/Einschalten bis der Motor tatsächlich anzieht (Standard 0.78s). Wird auf alle Fahrten aufaddiert, damit die effektive Bewegung exakt stimmt.",
+          "stop_delay": "Zeit, die der Motor nach dem Abschalten des Relais bis zum Stillstand nachläuft (Standard 0.15s). Wird von der Relais-Einschaltdauer subtrahiert.",
+          "sperrzeit": "Sperrzeit-Schwellenwert (Standard 0.2s). Kürzere Fahrbefehle werden von Home Assistant blockiert, um versehentliche Komplettfahrten zu verhindern. Physische Tastendrücke unter diesem Wert lösen eine Komplettfahrt aus.",
+          "overtravel_time": "Zusätzliche Motorlaufzeit beim vollständigen Öffnen (100%) oder Schließen (0%), damit der mechanische Endschalter sicher erreicht und die Position rekalibriert wird.",
+          "interlock_delay": "Sicherheitspause beim Richtungswechsel, um gleichzeitiges Bestromen beider Motorwicklungen und Relaisabbrand zu verhindern."
+        }
+      }
+    }
+  },
+  "services": {
+    "set_known_position": {
+      "name": "Bekannte Position setzen",
+      "description": "Setzt die Position der Jalousie manuell ohne Fahrt (z. B. zur Neukalibrierung).",
+      "fields": {
+        "position": {
+          "name": "Position",
+          "description": "Die zu setzende Position (0 = geschlossen, 100 = geöffnet)."
+        }
+      }
+    },
+    "set_known_tilt_position": {
+      "name": "Bekannte Lamellenposition setzen",
+      "description": "Setzt die Lamellenposition der Jalousie manuell ohne Fahrt.",
+      "fields": {
+        "position": {
+          "name": "Lamellenposition",
+          "description": "Die zu setzende Lamellenposition (0 = geschlossen, 100 = geöffnet)."
+        }
+      }
+    }
+  }
+}
